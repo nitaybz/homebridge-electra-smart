@@ -13,7 +13,7 @@
                 "type": "string",
                 "required": true
             },
-            "apiKey": {
+            "token": {
                 "title": "Token",
                 "description": "This value can be obtain via terminal command: `electra-extract`",
                 "type": "string",

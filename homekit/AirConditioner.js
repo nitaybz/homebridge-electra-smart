@@ -41,7 +41,7 @@ class AirConditioner {
 
 		this.stateManager = require('./StateManager')(this, platform)
 
-		this.UUID = this.api.hap.uuid.generate(this.id)
+		this.UUID = this.api.hap.uuid.generate(this.id.toString())
 		this.accessory = platform.cachedAccessories.find(accessory => accessory.UUID === this.UUID)
 
 		if (!this.accessory) {

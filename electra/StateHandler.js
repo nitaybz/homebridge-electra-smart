@@ -69,9 +69,10 @@ module.exports = (device, platform) => {
 				
 				try {
 					// send state command to Electra
-					await ElectraApi.setDeviceState(device.id, newState)
+					await ElectraApi.setState(device.id, newState)
 				} catch(err) {
 					log(`ERROR setting ${prop} to ${value}`)
+					log(err)
 					setTimeout(() => {
 						platform.setProcessing = false
 						platform.refreshState()
@@ -79,8 +80,12 @@ module.exports = (device, platform) => {
 					return
 				}
 				setTimeout(() => {
-					device.updateHomeKit()
 					platform.setProcessing = false
+					device.updateHomeKit()
+					setTimeout(() => {
+						platform.setProcessing = false
+						platform.refreshState()
+					}, 3000)
 				}, 500)
 
 			}, setTimeoutDelay)

@@ -7,7 +7,7 @@ const deviceCapabilities = {
 				max: 30
 			}
 		},
-		fanSpeeds: ['LOW', 'MED', 'HIGH'],
+		fanSpeeds: ['LOW', 'MED', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
@@ -18,7 +18,7 @@ const deviceCapabilities = {
 				max: 30
 			}
 		},
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH'],
+		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
@@ -29,17 +29,17 @@ const deviceCapabilities = {
 				max: 30
 			}
 		},
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH'],
+		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
 	DRY: {
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH'],
+		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
 	FAN: {
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH'],
+		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	}
@@ -114,15 +114,15 @@ module.exports = {
 
 		if (state.active) {
 			state.mode = deviceState.AC_MODE
-			
-			const modeCapabilities = deviceCapabilities[state.mode]
-
-			if (modeCapabilities.swing)
-				state.swing = deviceState.SWING === 'rangeFull' ? 'SWING_ENABLED' : 'SWING_DISABLED'
-	
-			if (modeCapabilities.fanSpeeds)
-				state.fanSpeed = fanSpeedToHK(deviceState.FANSPD, modeCapabilities.fanSpeeds)
 		}
+
+		const modeCapabilities = deviceCapabilities[state.mode || 'COOL']
+
+		if ('SWING' in deviceState && deviceState.SWING !== 'None')
+			state.swing = deviceState.SWING === 'ON' ? 'SWING_ENABLED' : 'SWING_DISABLED'
+
+		if ('FANSPD' in deviceState && deviceState.FANSPD !== 'None')
+			state.fanSpeed = fanSpeedToHK(deviceState.FANSPD, modeCapabilities.fanSpeeds)
 
 		if (device.filtersCleaning) {
 			state.filterChange = deviceState.CLEAR_FILT === 'ON' ? 'CHANGE_FILTER' : 'FILTER_OK'
@@ -133,7 +133,6 @@ module.exports = {
 			// else
 			// 	state.filterLifeLevel =  100 - Math.floor(acOnSecondsSinceLastFiltersClean/filtersCleanSecondsThreshold*100)
 		}
-
 
 		return state
 	},
@@ -152,10 +151,10 @@ module.exports = {
 			'SPT': state.targetTemperature
 		}
 
-		if ('swing' in device.capabilities[state.mode])
+		if ('swing' in device.capabilities[state.mode] && device.capabilities[state.mode].swing)
 			acState['SWING'] = state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
 
-		if ('fanSpeeds' in device.capabilities[state.mode])
+		if ('fanSpeeds' in device.capabilities[state.mode] && device.capabilities[state.mode].fanSpeeds.length)
 			acState['FANSPD'] = HKToFanSpeed(state.fanSpeed, device.capabilities[state.mode].fanSpeeds)
 
 		return acState

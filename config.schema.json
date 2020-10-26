@@ -2,7 +2,7 @@
     "pluginAlias": "ElectraSmart",
     "pluginType": "platform",
     "singular": true,
-    "headerDisplay": "Homebridge plugin for Electra Smart A/C <br> To retrieve Credentials, you must run `electra-extract` command in terminal",
+    "headerDisplay": "Homebridge plugin for Electra Smart A/C <br> To retrieve credentials (`imei` && `token`), you must run `electra-extract` command in terminal",
     "footerDisplay": "Created by @nitaybz",
     "schema": {
         "type": "object",

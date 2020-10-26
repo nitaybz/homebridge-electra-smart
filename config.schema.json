@@ -1,0 +1,53 @@
+{
+    "pluginAlias": "ElectraSmart",
+    "pluginType": "platform",
+    "singular": true,
+    "headerDisplay": "Homebridge plugin for Electra Smart A/C <br> To retrieve Credentials, you must run `electra-extract` command in terminal",
+    "footerDisplay": "Created by @nitaybz",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "imei": {
+                "title": "IMEI",
+                "description": "This value can be obtain via terminal command: `electra-extract`",
+                "type": "string",
+                "required": true
+            },
+            "apiKey": {
+                "title": "Token",
+                "description": "This value can be obtain via terminal command: `electra-extract`",
+                "type": "string",
+                "required": true
+            },
+            "disableFan": {
+                "title": "Disable Fan Accessory",
+                "description": "Disable FAN mode control - remove extra fan accessory",
+                "type": "boolean",
+                "default": false,
+                "required": false
+            },
+            "disableDry": {
+                "title": "Disable Dry Accessory",
+                "description": "Disable DRY mode control - remove extra dehumidifier accessory",
+                "type": "boolean",
+                "default": false,
+                "required": false
+            },
+			"statePollingInterval": {
+				"title": "AC Device Status Polling Interval in Seconds",
+				"description": "Time in seconds between each status polling of the Electra devices (set to 0 for no polling)",
+				"default": 30,
+				"type": "integer",
+				"minimum": 0,
+				"maximum": 600
+			},
+            "debug": {
+                "title": "Enable Debug Logs",
+                "description": "When checked, the plugin will produce extra logs for debugging purposes",
+                "type": "boolean",
+                "default": false,
+                "required": false
+            }
+        }
+    }
+  }

@@ -1,0 +1,56 @@
+{
+  "name": "homebridge-electra-smart",
+  "description": "Homebridge plugin for Electra Smart A/C",
+  "version": "2.0.12",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nitaybz/homebridge-electra-smart.git"
+  },
+  "license": "GNU",
+  "preferGlobal": true,
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge-electra-smart",
+    "homebridge-electra",
+    "electra",
+    "electra-smart",
+    "electra-air",
+    "smart-ac"
+  ],
+  "bugs": {
+    "url": "https://github.com/nitaybz/homebridge-electra-smart/issues"
+  },
+  "engines": {
+    "node": ">=10.17.0",
+    "homebridge": ">=0.4.4"
+  },
+  "dependencies": {
+    "axios": "^0.20.0",
+    "inquirer": "^7.3.3",
+    "node-persist": "^3.0.5"
+  },
+  "devDependencies": {
+    "eslint": "^7.1.0"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "bin": {
+    "electra-extract": "./bin/cli.js"
+  },
+  "funding": [
+    {
+      "type": "paypal",
+      "url": "https://paypal.me/nitaybz"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/nitaybz"
+    },
+    {
+      "type": "kofi",
+      "url": "https://ko-fi.com/nitaybz"
+    }
+  ]
+}

@@ -30,6 +30,7 @@ If you don't use Homebridge UI or HOOBS, or if you want to know more about the p
 
 1. Install homebridge using: `sudo npm install -g homebridge --unsafe-perm`
 2. Install this plugin using: `sudo npm install -g homebridge-electra-smart`
+3. Run commad `electra-extract` in terminal and follow instructions to extract token and imei.
 3. Update your configuration file. See `config-sample.json` in this repository for a sample.
 
 \* install from git: `sudo npm install -g git+https://github.com/nitaybz/homebridge-electra-smart.git`

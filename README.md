@@ -73,8 +73,8 @@ If you don't use Homebridge UI or HOOBS, or if you want to know more about the p
 |             Parameter            |                       Description                       | Required |  Default |   type   |
 | -------------------------------- | ------------------------------------------------------- |:--------:|:--------:|:--------:|
 | `platform`                 | always "ElectraSmart"                                            |     ✓    |     -    |  String  |
-| `imei`                 | Generated IMEI: obtain from terminal command - `electra-extract`                          |     ✓    |     -    |  String  |
-| `token`                 | Access Token: obtain from terminal command - `electra-extract` password                                 |     ✓    |     -    |  String  |
+| `imei`                 | Generated IMEI: obtain from terminal command - `electra-extract`       |     ✓    |     -    |  String  |
+| `token`                 | Access Token: obtain from terminal command - `electra-extract`       |     ✓    |     -    |  String  |
 | `disableFan`               |  When set to `true`, it will disable the FAN accessory        |          |  `false` |  Boolean |
 | `disableDry`               |  When set to `true`, it will disable the DRY accessory        |          |  `false` |  Boolean |
 | `debug`       |  When set to `true`, the plugin will produce extra logs for debugging purposes        |          |  `false` |  Boolean  |

@@ -107,12 +107,12 @@ module.exports = {
 		const deviceMeasurements = JSON.parse(device.state.DIAG_L2).DIAG_L2
 
 		const state = {
-			active: deviceState.AC_MODE !== 'STBY',
+			active: (deviceState.AC_MODE !== 'STBY' && !('TURN_ON_OFF' in deviceState)) || (('TURN_ON_OFF' in deviceState) && deviceState.TURN_ON_OFF !== 'OFF'),
 			targetTemperature: deviceState.SPT,
 			currentTemperature: parseInt(deviceMeasurements.I_RAT)
 		}
 
-		if (state.active) {
+		if (state.active || deviceState.TURN_ON_OFF) {
 			state.mode = deviceState.AC_MODE
 		}
 
@@ -141,10 +141,16 @@ module.exports = {
 		const lastState = JSON.parse(device.rawState.OPER).OPER
 		
 		if (!state.active) {
-			lastState.AC_MODE = 'STBY'
+			if ('TURN_ON_OFF' in lastState)
+				lastState.TURN_ON_OFF === 'OFF'
+			else 
+				lastState.AC_MODE = 'STBY'
 			return lastState
 		}
 		
+		if ('TURN_ON_OFF' in lastState)
+			lastState.TURN_ON_OFF === 'ON'
+
 		const acState = {
 			...lastState,
 			'AC_MODE': state.mode,

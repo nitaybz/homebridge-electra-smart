@@ -80,12 +80,11 @@ module.exports = (device, platform) => {
 					return
 				}
 				setTimeout(() => {
-					platform.setProcessing = false
 					device.updateHomeKit()
 					setTimeout(() => {
 						platform.setProcessing = false
 						platform.refreshState()
-					}, 3000)
+					}, 5000)
 				}, 500)
 
 			}, setTimeoutDelay)

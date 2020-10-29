@@ -18,7 +18,7 @@ const deviceCapabilities = {
 				max: 30
 			}
 		},
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
+		fanSpeeds: ['LOW', 'MED', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
@@ -29,17 +29,17 @@ const deviceCapabilities = {
 				max: 30
 			}
 		},
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
+		fanSpeeds: ['LOW', 'MED', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
 	DRY: {
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
+		fanSpeeds: ['LOW', 'MED', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	},
 	FAN: {
-		fanSpeeds: ['LOW', 'MEDIUM', 'HIGH', 'AUTO'],
+		fanSpeeds: ['LOW', 'MED', 'HIGH', 'AUTO'],
 		autoFanSpeed: true,
 		swing: false
 	}

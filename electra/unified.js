@@ -154,7 +154,7 @@ module.exports = {
 		const acState = {
 			...lastState,
 			'AC_MODE': state.mode,
-			'SPT': state.targetTemperature
+			'SPT': typeof lastState.SPT === 'string' ? state.targetTemperature.toString() : state.targetTemperature
 		}
 
 		if ('swing' in device.capabilities[state.mode] && device.capabilities[state.mode].swing)

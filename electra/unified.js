@@ -109,7 +109,7 @@ module.exports = {
 		const state = {
 			active: (deviceState.AC_MODE !== 'STBY' && !('TURN_ON_OFF' in deviceState)) || (('TURN_ON_OFF' in deviceState) && deviceState.TURN_ON_OFF !== 'OFF'),
 			targetTemperature: deviceState.SPT,
-			currentTemperature: parseInt(deviceMeasurements.I_RAT)
+			currentTemperature: Math.abs(parseInt(deviceMeasurements.I_RAT || deviceMeasurements.I_CALC_AT || 0))
 		}
 
 		if (state.active || deviceState.TURN_ON_OFF) {
@@ -142,14 +142,14 @@ module.exports = {
 		
 		if (!state.active) {
 			if ('TURN_ON_OFF' in lastState)
-				lastState.TURN_ON_OFF === 'OFF'
+				lastState.TURN_ON_OFF = 'OFF'
 			else 
 				lastState.AC_MODE = 'STBY'
 			return lastState
 		}
 		
 		if ('TURN_ON_OFF' in lastState)
-			lastState.TURN_ON_OFF === 'ON'
+			lastState.TURN_ON_OFF = 'ON'
 
 		const acState = {
 			...lastState,

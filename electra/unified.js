@@ -99,7 +99,7 @@ module.exports = {
 
 	capabilities: (device) => {
 
-		const deviceState = JSON.parse(device.rawState.OPER).OPER
+		const deviceState = JSON.parse(device.state.OPER).OPER
 
 		if ('HSWING' in deviceState || 'VSWING' in deviceState) {
 			Object.keys(deviceCapabilities).forEach(mode => {

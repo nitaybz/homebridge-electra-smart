@@ -14,7 +14,22 @@
 
       <div class="custom-control custom-checkbox">
         <input type="checkbox" class="custom-control-input" id="disableFanInput">
-        <label class="custom-control-label" for="disableFanInput">Disable Fan</label>
+        <label class="custom-control-label" for="disableFanInput">Disable Fan Accessory</label>
+      </div>
+
+      <div class="custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" id="disableDryInput">
+        <label class="custom-control-label" for="disableDryInput">Disable Dry Accessory</label>
+      </div>
+
+      <div class="custom-control custom-checkbox">
+        <input type="range" class="custom-control-input" id="statePollingIntervalInput" min="0" max="600" value="30"> 
+        <label class="custom-control-label" for="statePollingIntervalInput">AC Device Status Polling Interval in Seconds</label>
+      </div>
+
+      <div class="custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" id="debugInput">
+        <label class="custom-control-label" for="debugInput">Enable Debug Logs</label>
       </div>
     </form>
   </div>

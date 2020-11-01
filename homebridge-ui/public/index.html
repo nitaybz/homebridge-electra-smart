@@ -1,0 +1,152 @@
+<div class="card card-body">
+
+  <!-- shown when setup is complete or the plugin is already configured -->
+  <div id="setupComplete" style="display:none;">
+    <form id="configForm">
+      <div class="form-group">
+        <label for="imeiInput">IMEI</label>
+        <input type="text" class="form-control" id="imeiInput">
+      </div>
+      <div class="form-group">
+        <label for="tokenInput">Token</label>
+        <input type="text" class="form-control" id="tokenInput">
+      </div>
+
+      <div class="custom-control custom-checkbox">
+        <input type="checkbox" class="custom-control-input" id="disableFanInput">
+        <label class="custom-control-label" for="disableFanInput">Disable Fan</label>
+      </div>
+    </form>
+  </div>
+
+  <!-- shown when the plugin is not configured -->
+  <div id="setupRequired" style="display:none;">
+    <div id="step1">
+      <div class="form-group">
+        <label for="phoneNumberInput">Phone Number</label>
+        <input type="text" class="form-control" id="phoneNumberInput" aria-describedby="phoneNumberHelp" required>
+        <small id="phoneNumberHelp" class="form-text text-muted">Please insert the phone number registered to Electra Smart (e.g. 0524001234).</small>
+      </div>
+      <div class="text-center">
+        <button id="step1Submit" type="submit" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+
+    <div id="step2" style="display:none;">
+      <div class="form-group">
+        <label for="otpInput">OTP Code</label>
+        <input type="text" class="form-control" id="otpInput" aria-describedby="otpHelp">
+        <small id="otpHelp" class="form-text text-muted">Please enter the OTP password received at your phone.</small>
+      </div>
+      <div class="text-center">
+        <button id="step2Submit"  type="submit" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+  var pluginConfig = {
+    platform: 'ElectraSmart',
+  };
+
+  function updateFormFromConfig() {
+    // populate the form
+    document.getElementById('imeiInput').value = pluginConfig.imei;
+    document.getElementById('tokenInput').value = pluginConfig.token;
+    document.getElementById('disableFanInput').checked = pluginConfig.disableFan;
+    homebridge.fixScrollHeight();
+  }
+
+  function updateConfigFromForm() {
+    pluginConfig.imei = document.getElementById('imeiInput').value;
+    pluginConfig.token = document.getElementById('tokenInput').value;
+    pluginConfig.disableFan = document.getElementById('disableFanInput').checked;
+  }
+
+  (async () => {
+    // get the plugin config blocks (this returns an array)
+    const pluginConfigBlocks = await homebridge.getPluginConfig();
+
+    if (!pluginConfigBlocks.length) {
+      document.getElementById('setupRequired').style.display = 'block';
+    } else {
+      pluginConfig = pluginConfigBlocks[0];
+      updateFormFromConfig();
+      document.getElementById('setupComplete').style.display = 'block';
+    }
+  })();
+
+  // watch for changes to the config form
+  document.getElementById('configForm').addEventListener('input', () => {
+    // extract the values from the form - stored in var pluginConfig.
+    updateConfigFromForm();
+
+    // send the current value to the UI.
+    homebridge.updatePluginConfig([pluginConfig]);
+  });
+
+  // step 1 submit handler
+  document.getElementById('step1Submit').addEventListener('click', async () => {
+    const phoneValue = document.getElementById('phoneNumberInput').value;
+
+    if (!phoneValue) {
+      homebridge.toast.error('Please enter a valid phone number.', 'Error');
+      return;
+    }
+
+    document.getElementById('step1Submit').setAttribute('disabled', 'disabled');
+
+    try {
+      await homebridge.request('/request-otp', { phone: phoneValue });
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+    } catch (e) {
+      homebridge.toast.error(e.message, 'Error');
+    }
+
+    document.getElementById('step1Submit').removeAttribute('disabled');
+  });
+
+  // step 2 submit handler
+  document.getElementById('step2Submit').addEventListener('click', async () => {
+    const phoneValue = document.getElementById('phoneNumberInput').value;
+    const otpValue = document.getElementById('otpInput').value;
+
+    if (!otpValue) {
+      homebridge.toast.error('Please enter a valid OTP code.', 'Error');
+      return;
+    }
+
+    document.getElementById('step2Submit').setAttribute('disabled', 'disabled');
+
+    try {
+      const response = await homebridge.request('/check-otp', { phone: phoneValue, code: otpValue });
+      
+      // update the config
+      pluginConfig.imei = response.imei;
+      pluginConfig.token = response.token;
+
+      // populate the form
+      updateFormFromConfig();
+
+      // update the config
+      await homebridge.updatePluginConfig([pluginConfig]);
+
+      // trigger save
+      await homebridge.savePluginConfig();
+
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('setupRequired').style.display = 'none';
+      document.getElementById('setupComplete').style.display = 'block';
+
+    } catch (e) {
+      homebridge.toast.error(e.error || e.message, 'Error');
+    }
+
+    document.getElementById('step2Submit').removeAttribute('disabled');
+  });
+
+</script>

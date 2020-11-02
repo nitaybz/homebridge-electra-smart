@@ -77,7 +77,7 @@
     document.getElementById('tokenInput').value = pluginConfig.token;
     document.getElementById('disableFanInput').checked = pluginConfig.disableFan;
     document.getElementById('disableDryInput').checked = pluginConfig.disableDry;
-    document.getElementById('statePollingIntervalInput').value = pluginConfig.statePollingInterval;
+    document.getElementById('statePollingIntervalInput').value = !pluginConfig.statePollingInterval && pluginConfig.statePollingInterval !== 0 ? 30 : pluginConfig.statePollingInterval ;
     document.getElementById('debugInput').checked = pluginConfig.debug;
     homebridge.fixScrollHeight();
   }

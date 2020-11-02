@@ -25,8 +25,9 @@
       </div>
 
       <div class="form-group">
-        <label for="statePollingIntervalInput">AC Device Status Polling Interval in Seconds</label>
+        <label for="statePollingIntervalInput">AC Device Status Polling Interval</label>
         <input type="range" class="custom-range" id="statePollingIntervalInput" min="0" max="600" value="30"> 
+        <span id="pollingValue">30 seconds</span> 
         <small id="help" class="form-text text-muted">Time in seconds between each status polling of the Electra devices (set to 0 for no polling)</small>
       </div>
 
@@ -90,7 +91,11 @@
     pluginConfig.statePollingInterval = parseInt(document.getElementById('statePollingIntervalInput').value);
     pluginConfig.debug = document.getElementById('debugInput').checked;
 
-    
+  }
+
+  function adjustPollingValue() {
+    const pollingValue = document.getElementById('statePollingIntervalInput').value;
+    document.getElementById('pollingValue').innerHTML = pollingValue + ' seconds';
   }
 
   (async () => {
@@ -104,12 +109,14 @@
       updateFormFromConfig();
       document.getElementById('setupComplete').style.display = 'block';
     }
+    adjustPollingValue()
   })();
 
   // watch for changes to the config form
   document.getElementById('configForm').addEventListener('change', () => {
     // extract the values from the form - stored in var pluginConfig.
     updateConfigFromForm();
+    adjustPollingValue()
 
     // send the current value to the UI.
     homebridge.updatePluginConfig([pluginConfig]);

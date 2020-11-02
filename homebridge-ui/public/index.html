@@ -12,24 +12,28 @@
         <input type="text" class="form-control" id="tokenInput">
       </div>
 
-      <div class="custom-control custom-checkbox">
+      <div class="custom-control custom-checkbox form-group">
         <input type="checkbox" class="custom-control-input" id="disableFanInput">
         <label class="custom-control-label" for="disableFanInput">Disable Fan Accessory</label>
+        <small id="help" class="form-text text-muted">"Disable FAN mode control - remove extra fan accessory</small>
       </div>
 
-      <div class="custom-control custom-checkbox">
+      <div class="custom-control custom-checkbox form-group">
         <input type="checkbox" class="custom-control-input" id="disableDryInput">
         <label class="custom-control-label" for="disableDryInput">Disable Dry Accessory</label>
+        <small id="help" class="form-text text-muted">"Disable DRY mode control - remove extra dehumidifier accessory</small>
       </div>
 
-      <div class="custom-control custom-checkbox">
-        <input type="range" class="custom-control-input" id="statePollingIntervalInput" min="0" max="600" value="30"> 
-        <label class="custom-control-label" for="statePollingIntervalInput">AC Device Status Polling Interval in Seconds</label>
+      <div class="form-group">
+        <label for="statePollingIntervalInput">AC Device Status Polling Interval in Seconds</label>
+        <input type="range" class="custom-range" id="statePollingIntervalInput" min="0" max="600" value="30"> 
+        <small id="help" class="form-text text-muted">Time in seconds between each status polling of the Electra devices (set to 0 for no polling)</small>
       </div>
 
-      <div class="custom-control custom-checkbox">
+      <div class="custom-control custom-checkbox form-group">
         <input type="checkbox" class="custom-control-input" id="debugInput">
         <label class="custom-control-label" for="debugInput">Enable Debug Logs</label>
+        <small id="help" class="form-text text-muted">When checked, the plugin will produce extra logs for debugging purposes</small>
       </div>
     </form>
   </div>
@@ -72,6 +76,9 @@
     document.getElementById('imeiInput').value = pluginConfig.imei;
     document.getElementById('tokenInput').value = pluginConfig.token;
     document.getElementById('disableFanInput').checked = pluginConfig.disableFan;
+    document.getElementById('disableDryInput').checked = pluginConfig.disableDry;
+    document.getElementById('statePollingIntervalInput').value = pluginConfig.statePollingInterval;
+    document.getElementById('debugInput').checked = pluginConfig.debug;
     homebridge.fixScrollHeight();
   }
 
@@ -79,6 +86,11 @@
     pluginConfig.imei = document.getElementById('imeiInput').value;
     pluginConfig.token = document.getElementById('tokenInput').value;
     pluginConfig.disableFan = document.getElementById('disableFanInput').checked;
+    pluginConfig.disableDry = document.getElementById('disableDryInput').checked;
+    pluginConfig.statePollingInterval = parseInt(document.getElementById('statePollingIntervalInput').value);
+    pluginConfig.debug = document.getElementById('debugInput').checked;
+
+    
   }
 
   (async () => {
@@ -95,7 +107,7 @@
   })();
 
   // watch for changes to the config form
-  document.getElementById('configForm').addEventListener('input', () => {
+  document.getElementById('configForm').addEventListener('change', () => {
     // extract the values from the form - stored in var pluginConfig.
     updateConfigFromForm();
 

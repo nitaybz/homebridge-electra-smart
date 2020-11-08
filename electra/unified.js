@@ -111,8 +111,8 @@ module.exports = {
 	},
 
 	acState: device => {
-		const deviceState = JSON.parse(device.state.OPER).OPER
-		const deviceMeasurements = JSON.parse(device.state.DIAG_L2).DIAG_L2
+		const deviceState = JSON.parse(device.rawState.OPER).OPER
+		const deviceMeasurements = JSON.parse(device.rawState.DIAG_L2).DIAG_L2
 
 		const state = {
 			active: (deviceState.AC_MODE !== 'STBY' && !('TURN_ON_OFF' in deviceState)) || (('TURN_ON_OFF' in deviceState) && deviceState.TURN_ON_OFF !== 'OFF'),
@@ -124,12 +124,31 @@ module.exports = {
 			state.mode = deviceState.AC_MODE
 		}
 
-		const modeCapabilities = deviceCapabilities[state.mode || 'COOL']
+		const modeCapabilities = device.capabilities[state.mode || 'COOL']
 
-		if ('HSWING' in deviceState)
-			state.swing = deviceState.HSWING === 'ON' ? 'SWING_ENABLED' : 'SWING_DISABLED'
-		else if ('VSWING' in deviceState)
-			state.swing = deviceState.VSWING === 'ON' ? 'SWING_ENABLED' : 'SWING_DISABLED'
+
+		if ('swing' in device.capabilities[state.mode] && device.capabilities[state.mode].swing) {
+
+			let vEnabled = true
+			let hEnabled = true
+			switch (device.swingDirection) {
+				case 'vertical':
+					if ('VSWING' in deviceState)
+						state.swing = deviceState.VSWING  === 'ON' ? 'SWING_ENABLED' : 'SWING_DISABLED'
+					break
+				case 'horizontal':
+					if ('HSWING' in deviceState)
+						state.swing = deviceState.HSWING  === 'ON' ? 'SWING_ENABLED' : 'SWING_DISABLED'
+					break
+				default:
+					if ('VSWING' in deviceState && deviceState.VSWING  === 'OFF')
+						vEnabled = false
+					if ('HSWING' in deviceState && deviceState.HSWING  === 'OFF')
+						hEnabled = false
+					state.swing = vEnabled && hEnabled ? 'SWING_ENABLED' : 'SWING_DISABLED'
+					break
+			}
+		}
 
 		if ('FANSPD' in deviceState)
 			state.fanSpeed = fanSpeedToHK(deviceState.FANSPD, modeCapabilities.fanSpeeds)
@@ -168,10 +187,29 @@ module.exports = {
 		}
 
 		if ('swing' in device.capabilities[state.mode] && device.capabilities[state.mode].swing) {
-			if ('HSWING' in lastState)
-				acState.HSWING = state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
-			else if ('VSWING' in lastState)
-				acState.VSWING = state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
+			
+			const swingState = state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
+
+			switch (device.swingDirection) {
+				case 'vertical':
+					if ('VSWING' in acState)
+						acState.VSWING = swingState
+					if ('HSWING' in acState)
+						acState.HSWING = 'OFF'
+					break
+				case 'horizontal':
+					if ('VSWING' in acState)
+						acState.VSWING = 'OFF'
+					if ('HSWING' in acState)
+						acState.HSWING = swingState
+					break
+				default:
+					if ('VSWING' in acState)
+						acState.VSWING = swingState
+					if ('HSWING' in acState)
+						acState.HSWING = swingState
+					break
+			}
 		}
 
 		if ('fanSpeeds' in device.capabilities[state.mode] && device.capabilities[state.mode].fanSpeeds.length)

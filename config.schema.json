@@ -42,6 +42,34 @@
 				"minimum": 0,
 				"maximum": 600
 			},
+            "minTemperature": {
+                "title": "Minimum Temperature",
+                "description": "Minimum Temperature to show in HomeKit",
+				"default": 16,
+				"type": "integer",
+				"minimum": 10,
+				"maximum": 35
+            },
+            "maxTemperature": {
+                "title": "Maximum Temperature",
+                "description": "Maximum Temperature to show in HomeKit",
+				"default": 30,
+				"type": "integer",
+				"minimum": 10,
+				"maximum": 35
+            },
+            "swingDirection": {
+                "title": "Swing Direction Control",
+                "description": "Choose what kind of swing you would like to control in HomeKit",
+                "type": "string",
+                "default": "both",
+                "required": true,
+                "oneOf": [
+					{ "title": "Both", "enum": [ "both" ] },
+					{ "title": "Vertical", "enum": [ "vertical" ] },
+					{ "title": "Horizontal", "enum": [ "horizontal" ] }
+                ]
+            },
             "debug": {
                 "title": "Enable Debug Logs",
                 "description": "When checked, the plugin will produce extra logs for debugging purposes",
@@ -50,5 +78,34 @@
                 "required": false
             }
         }
-    }
+    },
+	"layout": [
+		{
+			"key": "imei"
+		},
+		{
+			"key": "token"
+		},
+		{
+			"key": "disableFan"
+		},
+		{
+			"key": "disableDry"
+		},
+		{
+			"key": "debug"
+		},
+		{
+			"type": "fieldset",
+			"expandable": true,
+			"title": "Advanced Settings",
+			"description": "Don't change these, unless you understand what you're doing.",
+			"items": [
+				"statePollingInterval",
+				"minTemperature",
+				"maxTemperature",
+				"swingDirection"
+			]
+		}
+	]
   }

@@ -14,6 +14,9 @@
       "token": "**************************",
       "disableFan": false,
       "disableDry": false,
+      "minTemperature": 16,
+      "maxTemperature": 30,
+      "swingDirection": "both",
       "statePollingInterval": 30,
       "debug": false
     }

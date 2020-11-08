@@ -1,12 +1,11 @@
 const unified = require('../electra/unified')
-let Characteristic, Service, CELSIUS_UNIT, FAHRENHEIT_UNIT
+let Characteristic, Service, FAHRENHEIT_UNIT
 
 class AirConditioner {
 	constructor(device, platform) {
 
 		Service = platform.api.hap.Service
 		Characteristic = platform.api.hap.Characteristic
-		CELSIUS_UNIT = platform.CELSIUS_UNIT
 		FAHRENHEIT_UNIT = platform.FAHRENHEIT_UNIT
 
 		const deviceInfo = unified.deviceInformation(device)
@@ -27,11 +26,14 @@ class AirConditioner {
 		this.usesFahrenheit = this.temperatureUnit === FAHRENHEIT_UNIT
 		this.disableFan = platform.disableFan
 		this.disableDry = platform.disableDry
+		this.swingDirection = platform.swingDirection
+		this.minTemp = platform.minTemp
+		this.maxTemp = platform.maxTemp
 		this.filterService = deviceInfo.filterService
 		this.capabilities = unified.capabilities(device)
 
 		this.rawState = device.state
-		this.state = this.cachedState.devices[this.id] = unified.acState(device)
+		this.state = this.cachedState.devices[this.id] = unified.acState(this)
 
 		if (!this.state.mode)
 			this.state.mode = 'COOL'
@@ -121,8 +123,8 @@ class AirConditioner {
 		if (this.capabilities.COOL) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
 				.setProps({
-					minValue: this.capabilities.COOL.temperatures[CELSIUS_UNIT].min,
-					maxValue: this.capabilities.COOL.temperatures[CELSIUS_UNIT].max,
+					minValue: this.minTemp,
+					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
 				.on('get', this.stateManager.get.CoolingThresholdTemperature)
@@ -132,8 +134,8 @@ class AirConditioner {
 		if (this.capabilities.HEAT) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.HeatingThresholdTemperature)
 				.setProps({
-					minValue: this.capabilities.HEAT.temperatures[CELSIUS_UNIT].min,
-					maxValue: this.capabilities.HEAT.temperatures[CELSIUS_UNIT].max,
+					minValue: this.minTemp,
+					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
 				.on('get', this.stateManager.get.HeatingThresholdTemperature)
@@ -143,8 +145,8 @@ class AirConditioner {
 		if (this.capabilities.AUTO && !this.capabilities.COOL && this.capabilities.AUTO.temperatures) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
 				.setProps({
-					minValue: this.capabilities.AUTO.temperatures[CELSIUS_UNIT].min,
-					maxValue: this.capabilities.AUTO.temperatures[CELSIUS_UNIT].max,
+					minValue: this.minTemp,
+					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
 				.on('get', this.stateManager.get.CoolingThresholdTemperature)
@@ -155,8 +157,8 @@ class AirConditioner {
 		if (this.capabilities.AUTO && !this.capabilities.HEAT && this.capabilities.AUTO.temperatures) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.HeatingThresholdTemperature)
 				.setProps({
-					minValue: this.capabilities.AUTO.temperatures[CELSIUS_UNIT].min,
-					maxValue: this.capabilities.AUTO.temperatures[CELSIUS_UNIT].max,
+					minValue: this.minTemp,
+					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
 				.on('get', this.stateManager.get.HeatingThresholdTemperature)

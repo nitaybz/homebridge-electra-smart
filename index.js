@@ -23,6 +23,9 @@ class ElectraSmartPlatform {
 		this.name = config['name'] || PLATFORM_NAME
 		this.disableFan = config['disableFan'] || false
 		this.disableDry = config['disableDry'] || false
+		this.swingDirection = config['swingDirection'] || 'both'
+		this.minTemp = config['minTemperature'] || 16
+		this.maxTemp = config['maxTemperature'] || 30
 		this.debug = config['debug'] || false
 		this.PLUGIN_NAME = PLUGIN_NAME
 		this.PLATFORM_NAME = PLATFORM_NAME

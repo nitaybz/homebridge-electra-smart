@@ -111,8 +111,22 @@ module.exports = {
 	},
 
 	acState: device => {
-		const deviceState = JSON.parse(device.rawState.OPER).OPER
-		const deviceMeasurements = JSON.parse(device.rawState.DIAG_L2).DIAG_L2
+		let deviceState, deviceMeasurements
+		try {
+			deviceState = JSON.parse(device.rawState.OPER).OPER
+			deviceMeasurements = JSON.parse(device.rawState.DIAG_L2).DIAG_L2
+		} catch (err) {
+			device.log('Error: Can\'t get State! ---> returning OFF state')
+			device.log(err.stack || err.message)
+			device.log.easyDebug(err)
+
+			return {
+				active: false,
+				targetTemperature: 25,
+				currentTemperature: 25,
+				mode: 'COOL'
+			}
+		}
 
 		const state = {
 			active: (deviceState.AC_MODE !== 'STBY' && !('TURN_ON_OFF' in deviceState)) || (('TURN_ON_OFF' in deviceState) && deviceState.TURN_ON_OFF !== 'OFF'),

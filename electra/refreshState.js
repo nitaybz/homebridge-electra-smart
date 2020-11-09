@@ -13,6 +13,7 @@ module.exports = (platform) => {
 					
 				} catch(err) {
 					platform.log.easyDebug('<<<< ---- Refresh State FAILED! ---- >>>>')
+					platform.log.easyDebug(err)
 					platform.processingState = false
 					if (platform.pollingInterval) {
 						platform.log.easyDebug(`Will try again in ${platform.pollingInterval/1000} seconds...`)

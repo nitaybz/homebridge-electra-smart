@@ -127,7 +127,7 @@ module.exports = {
 		const modeCapabilities = device.capabilities[state.mode || 'COOL']
 
 
-		if ('swing' in device.capabilities[state.mode] && device.capabilities[state.mode].swing) {
+		if ('swing' in modeCapabilities && modeCapabilities.swing) {
 
 			let vEnabled = true
 			let hEnabled = true

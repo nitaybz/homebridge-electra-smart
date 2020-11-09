@@ -26,7 +26,7 @@ check with: `node -v` & `homebridge -V` and update if needed
 
 <!-- This plugin is Homebridge verified and HOOBS certified and can be easily installed and configured through their UI. -->
 
-**To use the plugin you must provide `token` and `imei`** which can be obtain in the 2 different ways:
+**To use this plugin you must provide `token` and `imei`** which can be obtain in 2 different ways:
 
 1. Using the latest Homebridge config UI version (v4.32.0), you can obtain `token` and `imei` easily through the plugin settings and fill all the needed configuration.
 

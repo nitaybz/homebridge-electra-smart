@@ -99,14 +99,17 @@ module.exports = {
 
 	capabilities: (device) => {
 
-		const deviceState = JSON.parse(device.state.OPER).OPER
+		try {
+			const deviceState = JSON.parse(device.state.OPER).OPER
 
-		if ('HSWING' in deviceState || 'VSWING' in deviceState) {
-			Object.keys(deviceCapabilities).forEach(mode => {
-				deviceCapabilities[mode].swing = true
-			})
+			if ('HSWING' in deviceState || 'VSWING' in deviceState) {
+				Object.keys(deviceCapabilities).forEach(mode => {
+					deviceCapabilities[mode].swing = true
+				})
+			}
+		} catch (err) {
+			// device.log('Error: Can\'t get State!')
 		}
-
 		return deviceCapabilities
 	},
 

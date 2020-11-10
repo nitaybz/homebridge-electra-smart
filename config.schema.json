@@ -37,7 +37,7 @@
 			"statePollingInterval": {
 				"title": "AC Device Status Polling Interval in Seconds",
 				"description": "Time in seconds between each status polling of the Electra devices (set to 0 for no polling)",
-				"default": 30,
+				"default": 90,
 				"type": "integer",
 				"minimum": 0,
 				"maximum": 600

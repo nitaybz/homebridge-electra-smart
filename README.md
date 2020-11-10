@@ -6,11 +6,11 @@
 
 [![Downloads](https://img.shields.io/npm/dt/homebridge-electra-smart.svg?color=critical)](https://www.npmjs.com/package/homebridge-electra-smart)
 [![Version](https://img.shields.io/npm/v/homebridge-electra-smart)](https://www.npmjs.com/package/homebridge-electra-smart)<br>
-<!-- [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins) [![Homebridge Discord](https://img.shields.io/discord/432663330281226270?color=728ED5&logo=discord&label=discord)](https://discord.gg/yguuVAX)<br> -->
-<!-- [![certified-hoobs-plugin](https://badgen.net/badge/HOOBS/Certified/yellow)](https://plugins.hoobs.org?ref=10876) [![hoobs-support](https://badgen.net/badge/HOOBS/Support/yellow)](https://support.hoobs.org?ref=10876) -->
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins) [![Homebridge Discord](https://img.shields.io/discord/432663330281226270?color=728ED5&logo=discord&label=discord)](https://discord.gg/yguuVAX)<br>
+[![certified-hoobs-plugin](https://badgen.net/badge/HOOBS/Certified/yellow)](https://plugins.hoobs.org?ref=10876) [![hoobs-support](https://badgen.net/badge/HOOBS/Support/yellow)](https://support.hoobs.org?ref=10876)
 
 
-[Homebridge](https://github.com/nfarina/homebridge) plugin for Electra Smart A/C
+[Homebridge](https://github.com/nfarina/homebridge) plugin for Electra A/C that works with Electra Smart app.
 
 <img src="branding/product.jpg?v2" width="300px">
 
@@ -24,7 +24,7 @@ check with: `node -v` & `homebridge -V` and update if needed
 
 # Installation
 
-<!-- This plugin is Homebridge verified and HOOBS certified and can be easily installed and configured through their UI. -->
+This plugin is Homebridge verified and HOOBS certified and can be easily installed and configured through their UI.
 
 **To use this plugin you must provide `token` and `imei`** which can be obtain in 2 different ways:
 
@@ -39,7 +39,7 @@ check with: `node -v` & `homebridge -V` and update if needed
 1. Install homebridge using: `sudo npm install -g homebridge --unsafe-perm`
 2. Install this plugin using: `sudo npm install -g homebridge-electra-smart`
 3. Run the command `electra-extract` in terminal and follow instructions to extract token and imei.
-3. Update your configuration file. See `config-sample.json` in this repository for a sample.
+4. Update your configuration file. See `config-sample.json` in this repository for a sample.
 
 \* install from git: `sudo npm install -g git+https://github.com/nitaybz/homebridge-electra-smart.git`
 
@@ -71,7 +71,7 @@ check with: `node -v` & `homebridge -V` and update if needed
         "minTemperature": 16,
         "maxTemperature": 30,
         "swingDirection": "both",
-        "statePollingInterval": 30,
+        "statePollingInterval": 90,
         "debug": false
     }
 ]
@@ -86,7 +86,8 @@ check with: `node -v` & `homebridge -V` and update if needed
 | `imei`                 | Generated IMEI: obtain from terminal command - `electra-extract`       |     ✓    |     -    |  String  |
 | `token`                 | Access Token: obtain from terminal command - `electra-extract`       |     ✓    |     -    |  String  |
 | `disableFan`               |  When set to `true`, it will disable the FAN accessory        |          |  `false` |  Boolean |
-| `disableDry`               |  When set to `true`, it will disable the DRY accessory        |          |  `false` |  Boolean |
+| `disableDry`               |  When set to `true`, it will disable the DRY accessory       |          |  `false` |  Boolean |
+| `statePollingInterval`          | Time in seconds between each status polling of the Electra devices (set to 0 for no polling)     |  `90` |  Integer |
 | `swingDirection`               |  Choose what kind of swing you would like to control in HomeKit. can be `"vertical"`, `"horizontal"` or `"both"`        |          |  `"both"` |  Boolean |
 | `minTemperature`               |  Minimum Temperature to show in HomeKit Control         |          |  `16` |  Integer |
 | `maxTemperature`               |  Maximum Temperature to show in HomeKit Control        |          |  `30` |  Integer |
@@ -102,6 +103,20 @@ Swing support is added automatically if supported.
 Since HomeKit only have one control for swing, you can choose which swing type you would like HomeKit to control: vertical, horizontal or both (default).
 
 ### Issues & Debug
+
+#### I can't control the device, it always goes to previous state
+
+Check the internet connection and that you can control the device from Electra Smart app.
+If that doesn't help, turn on debug logs in the plugin settings and look for errors.
+
+#### Log error shows "intruder lockout"
+
+Electra detected that the plugin is spamming the api and consider it as intruder.
+To fix this issue immediately you can refresh the token and imei by deleting them in the config UI and clicking on the button to fetch them back.
+You can potentially prevent this error by setting polling interval to a very high number or 0.
+
+#### others
+
 If you experience any issues with the plugins please refer to the [Issues](https://github.com/nitaybz/homebridge-electra-smart/issues) tab <!-- or [electra-smart Discord channel](https://discord.gg/yguuVAX) --> and check if your issue is already described there, if it doesn't, please create a new issue with as much detailed information as you can give (logs are crucial).<br>
 
 if you want to even speed up the process, you can add `"debug": true` to your config, which will give me more details on the logs and speed up fixing the issue.

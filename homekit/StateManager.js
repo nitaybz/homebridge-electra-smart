@@ -61,10 +61,7 @@ module.exports = (device, platform) => {
 				const mode = device.state.mode
 		
 				log.easyDebug(device.name, '(GET) - Target HeaterCooler State is:', active ? mode : 'OFF')
-				if (!active || mode === 'FAN' || mode === 'DRY')
-					callback(null, null)
-				else
-					callback(null, Characteristic.TargetHeaterCoolerState[mode])
+				callback(null, Characteristic.TargetHeaterCoolerState[mode])
 			},
 
 			CurrentTemperature: (callback) => {
@@ -110,8 +107,6 @@ module.exports = (device, platform) => {
 			},
 
 			ACSwing: (callback) => {
-				// const active = device.state.active
-				// const mode = device.state.mode
 				const swing = device.state.swing
 
 				log.easyDebug(device.name, '(GET) - AC Swing is:', swing)
@@ -120,16 +115,10 @@ module.exports = (device, platform) => {
 			},
 
 			ACRotationSpeed: (callback) => {
-				const active = device.state.active
-				const mode = device.state.mode
 				const fanSpeed = device.state.fanSpeed
 
 				log.easyDebug(device.name, '(GET) - AC Rotation Speed is:', fanSpeed + '%')
-
-				if (!active || mode === 'FAN' || mode === 'DRY')
-					callback(null, null)
-				else
-					callback(null, fanSpeed)
+				callback(null, fanSpeed)
 			},
 
 			// FILTER
@@ -164,26 +153,17 @@ module.exports = (device, platform) => {
 			},
 
 			FanSwing: (callback) => {
-				// const active = device.state.active
-				// const mode = device.state.mode
 				const swing = device.state.swing
 
 				log.easyDebug(device.name, '(GET) - Fan Swing is:', swing)
-
 				callback(null, Characteristic.SwingMode[swing])
 			},
 
 			FanRotationSpeed: (callback) => {
-				const active = device.state.active
-				const mode = device.state.mode
 				const fanSpeed = device.state.fanSpeed
 
 				log.easyDebug(device.name, '(GET) - Fan Rotation Speed is:', fanSpeed + '%')
-
-				if (!active || mode !== 'FAN')
-					callback(null, null)
-				else
-					callback(null, fanSpeed)
+				callback(null, fanSpeed)
 			},
 
 			// DEHUMIDIFIER
@@ -218,25 +198,16 @@ module.exports = (device, platform) => {
 			},
 
 			DryRotationSpeed: (callback) => {
-				const active = device.state.active
-				const mode = device.state.mode
 				const fanSpeed = device.state.fanSpeed
 
 				log.easyDebug(device.name, '(GET) - Dry Rotation Speed is:', fanSpeed + '%')
-
-				if (!active || mode !== 'DRY')
-					callback(null, null)
-				else
-					callback(null, fanSpeed)
+				callback(null, fanSpeed)
 			},
 
 			DrySwing: (callback) => {
-				// const active = device.state.active
-				// const mode = device.state.mode
 				const swing = device.state.swing
 
 				log.easyDebug(device.name, '(GET) - Dry Swing is:', swing)
-
 				callback(null, Characteristic.SwingMode[swing])
 			},
 		

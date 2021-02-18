@@ -1,9 +1,11 @@
 const axios = require('axios')
 
-let log
+let log, ssid, storage
 
 module.exports = async function (platform) {
 	log = platform.log
+	storage = platform.storage
+	ssid = await storage.getItem('electra-ssid')
 
 	axios.defaults.baseURL = 'https://app.ecpiot.co.il/mobile/mobilecommand'
 	axios.defaults.headers = {
@@ -91,6 +93,13 @@ function apiRequest(sid, cmd, data) {
 
 function getSID(imei, token) {
 	return new Promise((resolve, reject) => {
+
+		if (ssid && new Date().getTime() < ssid.expirationDate) {
+			log.easyDebug('Found valid ssid in cache', ssid.key)
+			resolve(ssid.key)
+			return
+		}
+
 		let body = {
 			'pvdid': 1,
 			'id': 99,
@@ -106,8 +115,14 @@ function getSID(imei, token) {
 		axios.post(null, body)
 			.then(response => {
 				if (response.data.data && response.data.data.sid) {
-					log.easyDebug(`Successful SID response: ${response.data.data.sid}`)
-					resolve(response.data.data.sid)
+					const newSsid = response.data.data.sid
+					log.easyDebug(`Successful SID response: ${newSsid}`)
+					ssid = {
+						key: newSsid,
+						expirationDate: new Date().getTime() + (1000 * 60 * 60) // one hour
+					}
+					storage.setItem('electra-ssid', ssid)
+					resolve(newSsid)
 				} else {
 					const error = `Could NOT get Session ID: ${response.data.data ? response.data.data.res_desc : JSON.stringify(response.data)}`
 					reject(error)

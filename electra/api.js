@@ -1,4 +1,5 @@
-const axios = require('axios')
+const axiosLib = require('axios');
+let axios = axiosLib.create();
 
 let log, ssid, storage
 

@@ -88,7 +88,7 @@ module.exports = {
 	deviceInformation: device => {
 		return {
 			id: device.id,
-			model: device.model,
+			model: device.model || 'unknown',
 			serial: device.sn,
 			manufacturer: device.manufactor,
 			roomName: device.name,

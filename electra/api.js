@@ -35,7 +35,7 @@ module.exports = async function (platform) {
 				} catch (err) {
 					log(err)
 					log(`COULD NOT get ${device.name} (${device.id}) state !! skipping device...`)
-					return null
+					throw err
 				}
 			})
 			
@@ -80,12 +80,13 @@ function apiRequest(sid, cmd, data) {
 					log.easyDebug(JSON.stringify(response.data.data))
 					resolve(response.data.data)
 				} else {
-					const error = `Could NOT get Session ID: ${response.data.data ? response.data.data.res_desc : JSON.stringify(response.data)}`
+					const error = `Failed sending API request: ${response.data.data ? response.data.data.res_desc : JSON.stringify(response.data)}`
+					ssid = null
 					reject(error)
 				}
 			})
 			.catch(err => {
-				const error = `Could NOT get Session ID:: : '${err.response ? (err.response.data.error_description || err.response.data.error) : err}'`
+				const error = `Failed sending API request: '${err.response ? (err.response.data.error_description || err.response.data.error) : err}'`
 				this.log(error)
 				reject(error)
 			})

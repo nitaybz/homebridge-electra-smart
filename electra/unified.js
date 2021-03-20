@@ -89,7 +89,7 @@ module.exports = {
 		return {
 			id: device.id,
 			model: device.model || 'unknown',
-			serial: device.sn,
+			serial: device.sn !== '0000000000' ? device.sn : device.mac,
 			manufacturer: device.manufactor,
 			roomName: device.name,
 			temperatureUnit: 'C',

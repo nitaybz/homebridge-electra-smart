@@ -87,7 +87,7 @@ function apiRequest(sid, cmd, data) {
 			})
 			.catch(err => {
 				const error = `Failed sending API request: '${err.response ? (err.response.data.error_description || err.response.data.error) : err}'`
-				this.log(error)
+				log(error)
 				reject(error)
 			})
 	})

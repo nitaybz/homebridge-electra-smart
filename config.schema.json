@@ -71,7 +71,7 @@
                 ]
             },
             "excludeList": {
-                "title": "Devices to exclude (ID/Serial)",
+                "title": "Devices to exclude (ID/Serial/Mac/Name)",
                 "description": "Add devices IDs (ID from logs or serial from Home app) to exclude from homebridge",
                 "type": "array",
                 "items": {

@@ -23,7 +23,7 @@ module.exports = async function (platform) {
 			if (!Array.isArray(devicesResponse.devices))
 				throw 'Can\'t get devices from Electra API'
 		
-			let devices = devicesResponse.devices.filter(device =>  device.deviceTypeName === 'A/C')
+			let devices = devicesResponse.devices.filter(device =>  device.deviceTypeName === 'A/C' && !platform.excludeList.includes(device.id))
 			devices = devices.map(async device => {
 				try {
 					const state = await apiRequest(sid, 'GET_LAST_TELEMETRY', {'id': device.id, 'commandName': 'OPER,DIAG_L2'})

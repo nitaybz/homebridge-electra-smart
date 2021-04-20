@@ -18,6 +18,7 @@
       "maxTemperature": 30,
       "swingDirection": "both",
       "statePollingInterval": 90,
+      "excludeList": [],
       "debug": false
     }
   ],

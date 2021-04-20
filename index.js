@@ -27,6 +27,7 @@ class ElectraSmartPlatform {
 		this.minTemp = config['minTemperature'] || 16
 		this.maxTemp = config['maxTemperature'] || 30
 		this.debug = config['debug'] || false
+		this.excludeList = config['excludeList'] || []
 		this.PLUGIN_NAME = PLUGIN_NAME
 		this.PLATFORM_NAME = PLATFORM_NAME
 

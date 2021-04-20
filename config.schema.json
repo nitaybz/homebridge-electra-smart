@@ -70,6 +70,14 @@
 					{ "title": "Horizontal", "enum": [ "horizontal" ] }
                 ]
             },
+            "excludeList": {
+                "title": "Devices to exclude (ID/Serial)",
+                "description": "Add devices IDs (Serial in Home app) to exclude from homebridge",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+            },
             "debug": {
                 "title": "Enable Debug Logs",
                 "description": "When checked, the plugin will produce extra logs for debugging purposes",
@@ -102,6 +110,7 @@
 			"description": "Don't change these, unless you understand what you're doing.",
 			"items": [
 				"statePollingInterval",
+                "excludeList",
 				"minTemperature",
 				"maxTemperature",
 				"swingDirection"

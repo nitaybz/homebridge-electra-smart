@@ -72,7 +72,7 @@
             },
             "excludeList": {
                 "title": "Devices to exclude (ID/Serial)",
-                "description": "Add devices IDs (Serial in Home app) to exclude from homebridge",
+                "description": "Add devices IDs (ID from logs or serial from Home app) to exclude from homebridge",
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -104,13 +104,15 @@
 			"key": "debug"
 		},
 		{
+			"key": "excludeList"
+		},
+		{
 			"type": "fieldset",
 			"expandable": true,
 			"title": "Advanced Settings",
 			"description": "Don't change these, unless you understand what you're doing.",
 			"items": [
 				"statePollingInterval",
-                "excludeList",
 				"minTemperature",
 				"maxTemperature",
 				"swingDirection"

@@ -134,7 +134,8 @@ module.exports = {
 			deviceMeasurements = JSON.parse(device.rawState.DIAG_L2).DIAG_L2
 		} catch (err) {
 			device.log.easyDebug('Error: Can\'t get Measurements! ---> returning 0 for current temp')
-			device.log.easyDebug(err)
+			device.log.easyDebug('DIAG_L2:')
+			device.log.easyDebug(device.rawState.DIAG_L2)
 
 			deviceMeasurements = {
 				I_RAT: 0,

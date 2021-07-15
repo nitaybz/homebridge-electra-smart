@@ -117,7 +117,6 @@ module.exports = {
 		let deviceState, deviceMeasurements
 		try {
 			deviceState = JSON.parse(device.rawState.OPER).OPER
-			deviceMeasurements = JSON.parse(device.rawState.DIAG_L2).DIAG_L2
 		} catch (err) {
 			device.log('Error: Can\'t get State! ---> returning OFF state')
 			device.log(err.stack || err.message)
@@ -128,6 +127,18 @@ module.exports = {
 				targetTemperature: 25,
 				currentTemperature: 25,
 				mode: 'COOL'
+			}
+		}
+
+		try {
+			deviceMeasurements = JSON.parse(device.rawState.DIAG_L2).DIAG_L2
+		} catch (err) {
+			device.log.easyDebug('Error: Can\'t get Measurements! ---> returning 0 for current temp')
+			device.log.easyDebug(err)
+
+			deviceMeasurements = {
+				I_RAT: 0,
+				I_CALC_AT: 0
 			}
 		}
 

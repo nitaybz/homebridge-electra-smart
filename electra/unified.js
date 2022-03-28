@@ -74,15 +74,6 @@ function HKToFanSpeed(value, fanSpeeds) {
 	return selected
 }
 
-// function toFahrenheit(value) {
-// 	return Math.round((value * 1.8) + 32)
-// }
-
-
-// function toCelsius(value) {
-// 	return (value - 32) / 1.8
-// }
-
 module.exports = {
 
 	deviceInformation: device => {
@@ -93,7 +84,7 @@ module.exports = {
 			manufacturer: device.manufactor,
 			roomName: device.name,
 			temperatureUnit: 'C',
-			filterService: false
+			filterService: true
 		}
 	},
 
@@ -118,16 +109,11 @@ module.exports = {
 		try {
 			deviceState = JSON.parse(device.rawState.OPER).OPER
 		} catch (err) {
-			device.log('Error: Can\'t get State! ---> returning OFF state')
-			device.log(err.stack || err.message)
-			device.log.easyDebug(err)
+			device.log.error('Error: Can\'t get State! ---> returning OFF state')
+			device.log.error(err.stack || err.message)
+			device.log.easyDebug(device.rawState || err)
 
-			return {
-				active: false,
-				targetTemperature: 25,
-				currentTemperature: 25,
-				mode: 'COOL'
-			}
+			return null
 		}
 
 		try {
@@ -137,10 +123,7 @@ module.exports = {
 			device.log.easyDebug('DIAG_L2:')
 			device.log.easyDebug(device.rawState.DIAG_L2)
 
-			deviceMeasurements = {
-				I_RAT: 0,
-				I_CALC_AT: 0
-			}
+			return null
 		}
 
 		const state = {
@@ -195,10 +178,10 @@ module.exports = {
 		return state
 	},
 
-	formattedState: (device, state) => {
+	formattedState: (device) => {
 		const lastState = JSON.parse(device.rawState.OPER).OPER
 		
-		if (!state.active) {
+		if (!device.state.active) {
 			if ('TURN_ON_OFF' in lastState)
 				lastState.TURN_ON_OFF = 'OFF'
 			else 
@@ -211,13 +194,13 @@ module.exports = {
 
 		const acState = {
 			...lastState,
-			AC_MODE: state.mode,
-			SPT: typeof lastState.SPT === 'string' ? state.targetTemperature.toString() : state.targetTemperature
+			AC_MODE: device.state.mode,
+			SPT: typeof lastState.SPT === 'string' ? device.state.targetTemperature.toString() : device.state.targetTemperature
 		}
 
-		if ('swing' in device.capabilities[state.mode] && device.capabilities[state.mode].swing) {
+		if ('swing' in device.capabilities[device.state.mode] && device.capabilities[device.state.mode].swing) {
 			
-			const swingState = state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
+			const swingState = device.state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
 
 			switch (device.swingDirection) {
 				case 'vertical':
@@ -241,8 +224,8 @@ module.exports = {
 			}
 		}
 
-		if ('fanSpeeds' in device.capabilities[state.mode] && device.capabilities[state.mode].fanSpeeds.length)
-			acState['FANSPD'] = HKToFanSpeed(state.fanSpeed, device.capabilities[state.mode].fanSpeeds)
+		if ('fanSpeeds' in device.capabilities[device.state.mode] && device.capabilities[device.state.mode].fanSpeeds.length)
+			acState['FANSPD'] = HKToFanSpeed(device.state.fanSpeed, device.capabilities[device.state.mode].fanSpeeds)
 
 		return acState
 	}

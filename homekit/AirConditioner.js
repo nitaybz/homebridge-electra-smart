@@ -33,13 +33,18 @@ class AirConditioner {
 		this.capabilities = unified.capabilities(device)
 
 		this.rawState = device.state
-		this.state = this.cachedState.devices[this.id] = unified.acState(this)
+		this.state = this.cachedState.devices[this.id]
+		const newState = unified.acState(this)
+		if (newState)
+			this.state = newState
+		else if (!this.state) {
+			this.error('Can\'t initiate the plugin without initial state!')
+			this.error('The plugin will NOT create an accessory')
+		}
+
 
 		if (!this.state.mode)
 			this.state.mode = 'COOL'
-		
-		const StateHandler = require('../electra/StateHandler')(this, platform)
-		this.state = new Proxy(this.state, StateHandler)
 
 		this.stateManager = require('./StateManager')(this, platform)
 
@@ -93,11 +98,11 @@ class AirConditioner {
 			this.HeaterCoolerService = this.accessory.addService(Service.HeaterCooler, this.name, 'HeaterCooler')
 
 		this.HeaterCoolerService.getCharacteristic(Characteristic.Active)
-			.on('get', this.stateManager.get.ACActive)
-			.on('set', this.stateManager.set.ACActive)
+			.onSet(this.stateManager.set.ACActive)
+			.updateValue(this.stateManager.get.ACActive)
 
 		this.HeaterCoolerService.getCharacteristic(Characteristic.CurrentHeaterCoolerState)
-			.on('get', this.stateManager.get.CurrentHeaterCoolerState)
+			.updateValue(this.stateManager.get.CurrentHeaterCoolerState)
 
 
 		const props = []
@@ -108,8 +113,8 @@ class AirConditioner {
 	
 		this.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState)
 			.setProps({validValues: props})
-			.on('get', this.stateManager.get.TargetHeaterCoolerState)
-			.on('set', this.stateManager.set.TargetHeaterCoolerState)
+			.updateValue(this.stateManager.get.TargetHeaterCoolerState)
+			.onSet(this.stateManager.set.TargetHeaterCoolerState)
 
 
 		this.HeaterCoolerService.getCharacteristic(Characteristic.CurrentTemperature)
@@ -118,7 +123,7 @@ class AirConditioner {
 				maxValue: 100,
 				minStep: 0.1
 			})
-			.on('get', this.stateManager.get.CurrentTemperature)
+			.updateValue(this.stateManager.get.CurrentTemperature)
 
 		if (this.capabilities.COOL) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
@@ -127,8 +132,8 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.on('get', this.stateManager.get.CoolingThresholdTemperature)
-				.on('set', this.stateManager.set.CoolingThresholdTemperature)
+				.updateValue(this.stateManager.get.CoolingThresholdTemperature)
+				.onSet(this.stateManager.set.CoolingThresholdTemperature)
 		}
 
 		if (this.capabilities.HEAT) {
@@ -138,8 +143,8 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.on('get', this.stateManager.get.HeatingThresholdTemperature)
-				.on('set', this.stateManager.set.HeatingThresholdTemperature)
+				.updateValue(this.stateManager.get.HeatingThresholdTemperature)
+				.onSet(this.stateManager.set.HeatingThresholdTemperature)
 		}
 
 		if (this.capabilities.AUTO && !this.capabilities.COOL && this.capabilities.AUTO.temperatures) {
@@ -149,8 +154,8 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.on('get', this.stateManager.get.CoolingThresholdTemperature)
-				.on('set', this.stateManager.set.CoolingThresholdTemperature)
+				.updateValue(this.stateManager.get.CoolingThresholdTemperature)
+				.onSet(this.stateManager.set.CoolingThresholdTemperature)
 
 		}
 
@@ -161,38 +166,38 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.on('get', this.stateManager.get.HeatingThresholdTemperature)
-				.on('set', this.stateManager.set.HeatingThresholdTemperature)
+				.updateValue(this.stateManager.get.HeatingThresholdTemperature)
+				.onSet(this.stateManager.set.HeatingThresholdTemperature)
 		}
 
 		// this.HeaterCoolerService.getCharacteristic(Characteristic.TemperatureDisplayUnits)
-		// 	.on('get', this.stateManager.get.TemperatureDisplayUnits)
+		// 	.updateValue(this.stateManager.get.TemperatureDisplayUnits)
 
 		// this.HeaterCoolerService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-		// 	.on('get', this.stateManager.get.CurrentRelativeHumidity)
+		// 	.updateValue(this.stateManager.get.CurrentRelativeHumidity)
 
 
 		if ((this.capabilities.COOL && this.capabilities.COOL.swing) || (this.capabilities.HEAT && this.capabilities.HEAT.swing)) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.SwingMode)
-				.on('get', this.stateManager.get.ACSwing)
-				.on('set', this.stateManager.set.ACSwing)
+				.updateValue(this.stateManager.get.ACSwing)
+				.onSet(this.stateManager.set.ACSwing)
 		}
 
 		if (	(this.capabilities.COOL && this.capabilities.COOL.fanSpeeds) || (this.capabilities.HEAT && this.capabilities.HEAT.fanSpeeds)) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.RotationSpeed)
-				.on('get', this.stateManager.get.ACRotationSpeed)
-				.on('set', this.stateManager.set.ACRotationSpeed)
+				.updateValue(this.stateManager.get.ACRotationSpeed)
+				.onSet(this.stateManager.set.ACRotationSpeed)
 		}
 
 		if (this.filterService) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.FilterChangeIndication)
-				.on('get', this.stateManager.get.FilterChangeIndication)
+				.updateValue(this.stateManager.get.FilterChangeIndication)
 	
-			this.HeaterCoolerService.getCharacteristic(Characteristic.FilterLifeLevel)
-				.on('get', this.stateManager.get.FilterLifeLevel)
+			// this.HeaterCoolerService.getCharacteristic(Characteristic.FilterLifeLevel)
+			// 	.updateValue(this.stateManager.get.FilterLifeLevel)
 
 			this.HeaterCoolerService.getCharacteristic(Characteristic.ResetFilterIndication)
-				.on('set', this.stateManager.set.ResetFilterIndication)
+				.onSet(this.stateManager.set.ResetFilterIndication)
 		}
 
 	}
@@ -205,19 +210,19 @@ class AirConditioner {
 			this.FanService = this.accessory.addService(Service.Fanv2, this.roomName + ' Fan', 'Fan')
 
 		this.FanService.getCharacteristic(Characteristic.Active)
-			.on('get', this.stateManager.get.FanActive)
-			.on('set', this.stateManager.set.FanActive)
+			.updateValue(this.stateManager.get.FanActive)
+			.onSet(this.stateManager.set.FanActive)
 
 		if (this.capabilities.FAN.swing) {
 			this.FanService.getCharacteristic(Characteristic.SwingMode)
-				.on('get', this.stateManager.get.FanSwing)
-				.on('set', this.stateManager.set.FanSwing)
+				.updateValue(this.stateManager.get.FanSwing)
+				.onSet(this.stateManager.set.FanSwing)
 		}
 
 		if (this.capabilities.FAN.fanSpeeds) {
 			this.FanService.getCharacteristic(Characteristic.RotationSpeed)
-				.on('get', this.stateManager.get.FanRotationSpeed)
-				.on('set', this.stateManager.set.FanRotationSpeed)
+				.updateValue(this.stateManager.get.FanRotationSpeed)
+				.onSet(this.stateManager.set.FanRotationSpeed)
 		}
 
 	}
@@ -239,15 +244,15 @@ class AirConditioner {
 			this.DryService = this.accessory.addService(Service.HumidifierDehumidifier, this.roomName + ' Dry', 'Dry')
 
 		this.DryService.getCharacteristic(Characteristic.Active)
-			.on('get', this.stateManager.get.DryActive)
-			.on('set', this.stateManager.set.DryActive)
+			.updateValue(this.stateManager.get.DryActive)
+			.onSet(this.stateManager.set.DryActive)
 
 
 		this.DryService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-			.on('get', this.stateManager.get.CurrentRelativeHumidity)
+			.updateValue(this.stateManager.get.CurrentRelativeHumidity)
 
 		this.DryService.getCharacteristic(Characteristic.CurrentHumidifierDehumidifierState)
-			.on('get', this.stateManager.get.CurrentHumidifierDehumidifierState)
+			.updateValue(this.stateManager.get.CurrentHumidifierDehumidifierState)
 
 		this.DryService.getCharacteristic(Characteristic.TargetHumidifierDehumidifierState)
 			.setProps({
@@ -255,19 +260,19 @@ class AirConditioner {
 				maxValue: 2,
 				validValues: [Characteristic.TargetHumidifierDehumidifierState.DEHUMIDIFIER]
 			})
-			.on('get', this.stateManager.get.TargetHumidifierDehumidifierState)
-			.on('set', this.stateManager.set.TargetHumidifierDehumidifierState)
+			.updateValue(this.stateManager.get.TargetHumidifierDehumidifierState)
+			.onSet(this.stateManager.set.TargetHumidifierDehumidifierState)
 
 		if (this.capabilities.DRY.swing) {
 			this.DryService.getCharacteristic(Characteristic.SwingMode)
-				.on('get', this.stateManager.get.DrySwing)
-				.on('set', this.stateManager.set.DrySwing)
+				.updateValue(this.stateManager.get.DrySwing)
+				.onSet(this.stateManager.set.DrySwing)
 		}
 
 		if (this.capabilities.DRY.fanSpeeds) {
 			this.DryService.getCharacteristic(Characteristic.RotationSpeed)
-				.on('get', this.stateManager.get.DryRotationSpeed)
-				.on('set', this.stateManager.set.DryRotationSpeed)
+				.updateValue(this.stateManager.get.DryRotationSpeed)
+				.onSet(this.stateManager.set.DryRotationSpeed)
 		}
 
 	}
@@ -281,7 +286,11 @@ class AirConditioner {
 		}
 	}
 
-	updateHomeKit() {
+	updateHomeKit(state) {
+		if (!state)
+			return
+
+		this.state = state
 		
 		// update measurements
 		this.updateValue('HeaterCoolerService', 'CurrentTemperature', this.state.currentTemperature)
@@ -415,7 +424,23 @@ class AirConditioner {
 	}
 
 	updateValue (serviceName, characteristicName, newValue) {
-		if (this[serviceName].getCharacteristic(Characteristic[characteristicName]).value !== newValue) {
+		if (newValue !== 0 && newValue !== false && (typeof newValue === 'undefined' || !newValue)) {
+			this.log.easyDebug(`${this.roomName} - WRONG VALUE -> '${characteristicName}' for ${serviceName} with VALUE: ${newValue}`)
+			return
+		}
+		const minAllowed = this[serviceName].getCharacteristic(Characteristic[characteristicName]).props.minValue
+		const maxAllowed = this[serviceName].getCharacteristic(Characteristic[characteristicName]).props.maxValue
+		const validValues = this[serviceName].getCharacteristic(Characteristic[characteristicName]).props.validValues
+		const currentValue = this[serviceName].getCharacteristic(Characteristic[characteristicName]).value
+
+		if (validValues && !validValues.includes(newValue))
+			newValue = currentValue
+		if (minAllowed && newValue < minAllowed)
+			newValue = currentValue
+		else if (maxAllowed && newValue > maxAllowed)
+			newValue = currentValue
+
+		if (currentValue !== newValue) {
 			this[serviceName].getCharacteristic(Characteristic[characteristicName]).updateValue(newValue)
 			this.log.easyDebug(`${this.roomName} - Updated '${characteristicName}' for ${serviceName} with NEW VALUE: ${newValue}`)
 		}

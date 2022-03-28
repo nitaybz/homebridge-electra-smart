@@ -1,3 +1,5 @@
+const unified = require('../electra/unified')
+
 let Characteristic
 
 function toFahrenheit(value) {
@@ -19,376 +21,324 @@ function characteristicToMode(characteristic) {
 module.exports = (device, platform) => {
 	Characteristic = platform.api.hap.Characteristic
 	const log = platform.log
+	const ElectraApi = platform.ElectraApi
+	const setTimeoutDelay = 500
+	let preventTurningOff, setCommandPromise
+
+	const setCommand = (changes) => {
+		let changeExist = false
+		const state = {
+			...device.state
+		}
+		Object.keys(changes).forEach(key => { 
+			if (key in state && state[key] === changes[key])
+				return
+			changeExist = true
+			state[key] = changes[key]
+			// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
+			if (key === 'fanSpeed' && changes[key] === 0 && device.capabilities[state.mode].autoFanSpeed)
+				preventTurningOff = true
+		})
+
+		if (!changeExist)
+			return
+
+		if (!setCommandPromise) {
+			setCommandPromise = new Promise((resolve, reject) => {
+				platform.setProcessing = true
+				setTimeout(async function () {
+					// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
+					if (preventTurningOff && state.active === false) {
+						state.active = true
+						preventTurningOff = false
+					}
+
+					const formattedState = unified.formattedState(device)
+					log(device.name, ' -> Setting New State:')
+					log(JSON.stringify(formattedState, null, 2))
+
+					try {
+						// send state command to Electra
+						await ElectraApi.setState(device.id, formattedState)
+					} catch (err) {
+						log.error(`ERROR setting the following changes: ${JSON.stringify(changes)}`)
+						log.error(err.message || err.stack)
+						log.easyDebug(err)
+						platform.setProcessing = false
+						device.updateHomeKit(device.state)
+						reject(err)
+					}
+					resolve(true)
+					setTimeout(() => {
+						platform.setProcessing = false
+						device.updateHomeKit(state)
+					}, 1000)
+				}, setTimeoutDelay)
+			})
+		}
+		return setCommandPromise
+	}
 
 	return {
 
 		get: {
-			ACActive: (callback) => {
+			ACActive: () => {
 				const active = device.state.active
 				const mode = device.state.mode
-		
-				if (!active || mode === 'FAN' || mode === 'DRY') {
-					log.easyDebug(device.name, '(GET) - AC Active State: false')
-					callback(null, 0)
-				} else {
-					log.easyDebug(device.name, '(GET) - AC Active State: true')
-					callback(null, 1)
-				}
+				return (!active || mode === 'FAN' || mode === 'DRY') ? 0 : 1
 			},
 
-			CurrentHeaterCoolerState: (callback) => {
+			CurrentHeaterCoolerState: () => {
 				const active = device.state.active
 				const mode = device.state.mode
 				const targetTemp = device.state.targetTemperature
 				const currentTemp = device.state.currentTemperature
-		
-				log.easyDebug(device.name, '(GET) - Current HeaterCooler State is:', active ? mode : 'OFF')
-				
+
 				if (!active || mode === 'FAN' || mode === 'DRY')
-					callback(null, Characteristic.CurrentHeaterCoolerState.INACTIVE)
+					return Characteristic.CurrentHeaterCoolerState.INACTIVE
 				else if (mode === 'COOL')
-					callback(null, Characteristic.CurrentHeaterCoolerState.COOLING)
+					return Characteristic.CurrentHeaterCoolerState.COOLING
 				else if (mode === 'HEAT')
-					callback(null, Characteristic.CurrentHeaterCoolerState.HEATING)
+					return Characteristic.CurrentHeaterCoolerState.HEATING
 				else if (currentTemp > targetTemp)
-					callback(null, Characteristic.CurrentHeaterCoolerState.COOLING)
+					return Characteristic.CurrentHeaterCoolerState.COOLING
 				else
-					callback(null, Characteristic.CurrentHeaterCoolerState.HEATING)
+					return Characteristic.CurrentHeaterCoolerState.HEATING
 			},
-		
-			TargetHeaterCoolerState: (callback) => {
+
+			TargetHeaterCoolerState: () => {
 				const active = device.state.active
 				const mode = device.state.mode
-		
-				log.easyDebug(device.name, '(GET) - Target HeaterCooler State is:', active ? mode : 'OFF')
-				if (!active || mode === 'FAN' || mode === 'DRY') {
-					const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
-					callback(null, lastMode)
-				} else
-					callback(null, Characteristic.TargetHeaterCoolerState[mode])
-					
+				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
+				return (!active || mode === 'FAN' || mode === 'DRY') ? lastMode : Characteristic.TargetHeaterCoolerState[mode]
+
 			},
 
-			CurrentTemperature: (callback) => {
+			CurrentTemperature: () => {
 				const currentTemp = device.state.currentTemperature
-				if (device.usesFahrenheit)
-					log.easyDebug(device.name, '(GET) - Current Temperature is:', toFahrenheit(currentTemp) + 'ºF')
-				else
-					log.easyDebug(device.name, '(GET) - Current Temperature is:', currentTemp + 'ºC')
-
-				callback(null, currentTemp)
+				return currentTemp
 			},
 
-			CoolingThresholdTemperature: (callback) => {
+			CoolingThresholdTemperature: () => {
 				const targetTemp = device.state.targetTemperature
-
-				if (device.usesFahrenheit)
-					log.easyDebug(device.name, '(GET) - Target Cooling Temperature is:', toFahrenheit(targetTemp) + 'ºF')
-				else
-					log.easyDebug(device.name, '(GET) - Target Cooling Temperature is:', targetTemp + 'ºC')
-
-				callback(null, targetTemp)
+				return targetTemp
 			},
-			
-			HeatingThresholdTemperature: (callback) => {
+
+			HeatingThresholdTemperature: () => {
 				const targetTemp = device.state.targetTemperature
-
-				if (device.usesFahrenheit)
-					log.easyDebug(device.name, '(GET) - Target Heating Temperature is:', toFahrenheit(targetTemp) + 'ºF')
-				else
-					log.easyDebug(device.name, '(GET) - Target Heating Temperature is:', targetTemp + 'ºC')
-
-				callback(null, targetTemp)
+				return targetTemp
 			},
 
-			TemperatureDisplayUnits: (callback) => {
-				log.easyDebug(device.name, '(GET) - Temperature Display Units is:', device.temperatureUnit)
-				callback(null, device.usesFahrenheit ? Characteristic.TemperatureDisplayUnits.FAHRENHEIT : Characteristic.TemperatureDisplayUnits.CELSIUS)
+			TemperatureDisplayUnits: () => {
+				return device.usesFahrenheit ? Characteristic.TemperatureDisplayUnits.FAHRENHEIT : Characteristic.TemperatureDisplayUnits.CELSIUS
 			},
 
-			CurrentRelativeHumidity: (callback) => {
-				log.easyDebug(device.name, '(GET) - Current Relative Humidity is:', device.state.relativeHumidity, '%')
-				callback(null, device.state.relativeHumidity)
+			CurrentRelativeHumidity: () => {
+				return device.state.relativeHumidity
 			},
 
-			ACSwing: (callback) => {
+			ACSwing: () => {
 				const swing = device.state.swing
-
-				log.easyDebug(device.name, '(GET) - AC Swing is:', swing)
-
-				callback(null, Characteristic.SwingMode[swing])
+				return Characteristic.SwingMode[swing]
 			},
 
-			ACRotationSpeed: (callback) => {
+			ACRotationSpeed: () => {
 				const fanSpeed = device.state.fanSpeed
-
-				log.easyDebug(device.name, '(GET) - AC Rotation Speed is:', fanSpeed + '%')
-				callback(null, fanSpeed)
+				return fanSpeed
 			},
 
 			// FILTER
 
-			FilterChangeIndication: (callback) => {
+			FilterChangeIndication: () => {
 				const filterChange = device.state.filterChange
-
-				log.easyDebug(device.name, '(GET) - Filter Change Indication:', filterChange)
-				callback(null, Characteristic.FilterChangeIndication[filterChange])
+				return filterChange
 			},
 
-			FilterLifeLevel: (callback) => {
+			FilterLifeLevel: () => {
 				const filterLifeLevel = device.state.filterLifeLevel
-
-				log.easyDebug(device.name, '(GET) - Filter Life Level:', filterLifeLevel + '%')
-				callback(null, filterLifeLevel)
+				return filterLifeLevel
 			},
 
 
 			// FAN
-			FanActive: (callback) => {
+			FanActive: () => {
 				const active = device.state.active
 				const mode = device.state.mode
-		
-				if (!active || mode !== 'FAN') {
-					log.easyDebug(device.name, '(GET) - Fan Active State: false')
-					callback(null, 0)
-				} else {
-					log.easyDebug(device.name, '(GET) - Fan Active State: true')
-					callback(null, 1)
-				}
+
+				return (!active || mode !== 'FAN') ? 0 : 1
 			},
 
-			FanSwing: (callback) => {
+			FanSwing: () => {
 				const swing = device.state.swing
-
-				log.easyDebug(device.name, '(GET) - Fan Swing is:', swing)
-				callback(null, Characteristic.SwingMode[swing])
+				return Characteristic.SwingMode[swing]
 			},
 
-			FanRotationSpeed: (callback) => {
+			FanRotationSpeed: () => {
 				const fanSpeed = device.state.fanSpeed
-
-				log.easyDebug(device.name, '(GET) - Fan Rotation Speed is:', fanSpeed + '%')
-				callback(null, fanSpeed)
+				return fanSpeed
 			},
 
 			// DEHUMIDIFIER
-			DryActive: (callback) => {
+			DryActive: () => {
 				const active = device.state.active
 				const mode = device.state.mode
-		
-				if (!active || mode !== 'DRY') {
-					log.easyDebug(device.name, '(GET) - Dry Active State: false')
-					callback(null, 0)
-				} else {
-					log.easyDebug(device.name, '(GET) - Dry Active State: true')
-					callback(null, 1)
-				}
+
+				return (!active || mode !== 'DRY') ? 0 : 1
 			},
 
-			CurrentHumidifierDehumidifierState: (callback) => {
+			CurrentHumidifierDehumidifierState: () => {
 				const active = device.state.active
 				const mode = device.state.mode
-		
-				if (!active || mode !== 'DRY') {
-					log.easyDebug(device.name, '(GET) - Dry Current Dehumidifier State: INACTIVE')
-					callback(null, Characteristic.CurrentHumidifierDehumidifierState.INACTIVE)
-				} else {
-					log.easyDebug(device.name, '(GET) - Dry Current Dehumidifier State: DEHUMIDIFYING')
-					callback(null, Characteristic.CurrentHumidifierDehumidifierState.DEHUMIDIFYING)
-				}
+
+				return (!active || mode !== 'DRY') ?
+					Characteristic.CurrentHumidifierDehumidifierState.INACTIVE : Characteristic.CurrentHumidifierDehumidifierState.DEHUMIDIFYING
+
 			},
 
-			TargetHumidifierDehumidifierState: (callback) => {
-				callback(null, Characteristic.TargetHumidifierDehumidifierState.DEHUMIDIFIER)
+			TargetHumidifierDehumidifierState: () => {
+				return Characteristic.TargetHumidifierDehumidifierState.DEHUMIDIFIER
 			},
 
-			DryRotationSpeed: (callback) => {
+			DryRotationSpeed: () => {
 				const fanSpeed = device.state.fanSpeed
-
-				log.easyDebug(device.name, '(GET) - Dry Rotation Speed is:', fanSpeed + '%')
-				callback(null, fanSpeed)
+				return fanSpeed
 			},
 
-			DrySwing: (callback) => {
+			DrySwing: () => {
 				const swing = device.state.swing
-
-				log.easyDebug(device.name, '(GET) - Dry Swing is:', swing)
-				callback(null, Characteristic.SwingMode[swing])
+				return Characteristic.SwingMode[swing]
 			},
-		
+
 		},
-	
+
 		set: {
 
-			ACActive: (state, callback) => {
+			ACActive: (state) => {
 				state = !!state
 				log.easyDebug(device.name + ' -> Setting AC state Active:', state)
 
 				if (state) {
-					device.state.active = true
 					const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
 					const mode = characteristicToMode(lastMode)
 					log.easyDebug(device.name + ' -> Setting Mode to', mode)
-					device.state.mode = mode
+					return setCommand({active: false, mode})
 				} else if (device.state.mode === 'COOL' || device.state.mode === 'HEAT' || device.state.mode === 'AUTO')
-					device.state.active = false
-
-				callback()
+					return setCommand({active: false})
 			},
-		
-		
-			TargetHeaterCoolerState: (state, callback) => {
+
+
+			TargetHeaterCoolerState: (state) => {
 				const mode = characteristicToMode(state)
 				log.easyDebug(device.name + ' -> Setting Target HeaterCooler State:', mode)
-				device.state.mode = mode
-				device.state.active = true
-
-				callback()
+				return setCommand({active: true, mode})
 			},
-		
-			CoolingThresholdTemperature: (temp, callback) => {
-				if (device.usesFahrenheit)
-					log.easyDebug(device.name + ' -> Setting Cooling Threshold Temperature:', toFahrenheit(temp) + 'ºF')
-				else
-					log.easyDebug(device.name + ' -> Setting Cooling Threshold Temperature:', temp + 'ºC')
 
-				device.state.active = true
+			CoolingThresholdTemperature: (targetTemperature) => {
+				if (device.usesFahrenheit)
+					log.easyDebug(device.name + ' -> Setting Cooling Threshold Temperature:', toFahrenheit(targetTemperature) + 'ºF')
+				else
+					log.easyDebug(device.name + ' -> Setting Cooling Threshold Temperature:', targetTemperature + 'ºC')
+
 				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
 				const mode = characteristicToMode(lastMode)
-				device.state.targetTemperature = temp
 				log.easyDebug(device.name + ' -> Setting Mode to: ' + mode)
-				device.state.mode = mode
-				callback()
+				return setCommand({active: true, mode, targetTemperature})
 			},
-		
-			HeatingThresholdTemperature: (temp, callback) => {
+
+			HeatingThresholdTemperature: (targetTemperature) => {
 				if (device.usesFahrenheit)
-					log.easyDebug(device.name + ' -> Setting Heating Threshold Temperature:', toFahrenheit(temp) + 'ºF')
+					log.easyDebug(device.name + ' -> Setting Heating Threshold Temperature:', toFahrenheit(targetTemperature) + 'ºF')
 				else
-					log.easyDebug(device.name + ' -> Setting Heating Threshold Temperature:', temp + 'ºC')
+					log.easyDebug(device.name + ' -> Setting Heating Threshold Temperature:', targetTemperature + 'ºC')
 
-
-				device.state.active = true
 				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
 				const mode = characteristicToMode(lastMode)
-				device.state.targetTemperature = temp
 				log.easyDebug(device.name + ' -> Setting Mode to: ' + mode)
-				device.state.mode = mode
-				callback()
+				return setCommand({active: true, mode, targetTemperature})
 			},
-		
-			ACSwing: (state, callback) => {
-				
-				state = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
-				log.easyDebug(device.name + ' -> Setting AC Swing:', state)
-				device.state.swing = state
+
+			ACSwing: (state) => {
+
+				const swing = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
+				log.easyDebug(device.name + ' -> Setting AC Swing:', swing)
 
 				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
 				const mode = characteristicToMode(lastMode)
 				log.easyDebug(device.name + ' -> Setting Mode to', mode)
-				device.state.active = true
-				device.state.mode = mode
 
-				callback()
+				return setCommand({active: true, mode, swing})
 			},
-		
-			ACRotationSpeed: (speed, callback) => {
-				log.easyDebug(device.name + ' -> Setting AC Rotation Speed:', speed + '%')
-				device.state.fanSpeed = speed
+
+			ACRotationSpeed: (fanSpeed) => {
+				log.easyDebug(device.name + ' -> Setting AC Rotation Speed:', fanSpeed + '%')
 
 				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
 				const mode = characteristicToMode(lastMode)
 				log.easyDebug(device.name + ' -> Setting Mode to', mode)
-				device.state.active = true
-				device.state.mode = mode
 
-				callback()
+				return setCommand({active: true, mode, fanSpeed})
 			},
 
 			// FILTER
 
-			ResetFilterIndication: (value, callback) => {
-				log.easyDebug(device.name + ' -> Resetting Filter Indication !!')
-				device.state.filterChange = 0
-				device.state.filterLifeLevel = 100
-				callback()
+			ResetFilterIndication: () => {
+				// log.easyDebug(device.name + ' -> Resetting Filter Indication !!')
+				return
 			},
-		
+
 			// FAN
 
-			FanActive: (state, callback) => {
+			FanActive: (state) => {
 				state = !!state
 				log.easyDebug(device.name + ' -> Setting Fan state Active:', state)
 				if (state) {
-					device.state.active = true
 					log.easyDebug(device.name + ' -> Setting Mode to: FAN')
-					device.state.mode = 'FAN'
+					return setCommand({active: true, mode: 'FAN'})
 				} else if (device.state.mode === 'FAN')
-					device.state.active = false
-				callback()
+					return setCommand({active: false})
 			},
-		
-			FanSwing: (state, callback) => {
-				state = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
-				log.easyDebug(device.name + ' -> Setting Fan Swing:', state)
-				device.state.swing = state
 
-				device.state.active = true
+			FanSwing: (state) => {
+				const swing = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
+				log.easyDebug(device.name + ' -> Setting Fan Swing:', swing)
 				log.easyDebug(device.name + ' -> Setting Mode to: FAN')
-				device.state.mode = 'FAN'
-				callback()
+				return setCommand({active: true, mode: 'FAN', swing})
 			},
-		
-			FanRotationSpeed: (speed, callback) => {
-				log.easyDebug(device.name + ' -> Setting Fan Rotation Speed:', speed + '%')
-				device.state.fanSpeed = speed
 
-				device.state.active = true
+			FanRotationSpeed: (fanSpeed) => {
+				log.easyDebug(device.name + ' -> Setting Fan Rotation Speed:', fanSpeed + '%')
 				log.easyDebug(device.name + ' -> Setting Mode to: FAN')
-				device.state.mode = 'FAN'
-				callback()
+				return setCommand({active: true, mode: 'FAN', fanSpeed})
 			},
-		
+
 			// DEHUMIDIFIER
 
-			DryActive: (state, callback) => {
+			DryActive: (state) => {
 				state = !!state
 				log.easyDebug(device.name + ' -> Setting Dry state Active:', state)
 				if (state) {
-					device.state.active = true
 					log.easyDebug(device.name + ' -> Setting Mode to: DRY')
-					device.state.mode = 'DRY'
+					return setCommand({active: true, mode: 'DRY'})
 				} else if (device.state.mode === 'DRY')
-					device.state.active = false
-				callback()
+					return setCommand({active: false})
 			},
-		
-			TargetHumidifierDehumidifierState: (state, callback) => {
-				device.state.active = true
-				log.easyDebug(device.name + ' -> Setting Mode to: DRY')
-				device.state.mode = 'DRY'
-				callback()
-			},
-		
-			DrySwing: (state, callback) => {
-				state = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
-				log.easyDebug(device.name + ' -> Setting Dry Swing:', state)
-				device.state.swing = state
 
-				device.state.active = true
+			TargetHumidifierDehumidifierState: () => {
 				log.easyDebug(device.name + ' -> Setting Mode to: DRY')
-				device.state.mode = 'DRY'
-				callback()
+				return setCommand({active: true, mode: 'DRY'})
 			},
-		
-			DryRotationSpeed: (speed, callback) => {
-				log.easyDebug(device.name + ' -> Setting Dry Rotation Speed:', speed + '%')
-				device.state.fanSpeed = speed
 
-				device.state.active = true
+			DrySwing: (state) => {
+				const swing = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
+				log.easyDebug(device.name + ' -> Setting Dry Swing:', swing)
 				log.easyDebug(device.name + ' -> Setting Mode to: DRY')
-				device.state.mode = 'DRY'
-				callback()
+				return setCommand({active: true, mode: 'DRY', swing})
+			},
+
+			DryRotationSpeed: (fanSpeed) => {
+				log.easyDebug(device.name + ' -> Setting Dry Rotation Speed:', fanSpeed + '%')
+				log.easyDebug(device.name + ' -> Setting Mode to: DRY')
+				return setCommand({active: true, mode: 'DRY', fanSpeed})
 			},
 
 		}

@@ -1,7 +1,7 @@
 const axiosLib = require('axios');
 let axios = axiosLib.create();
 
-let log, ssid, storage
+let log, ssid, storage, lastSIDRequest
 
 module.exports = async function (platform) {
 	log = platform.log
@@ -101,6 +101,15 @@ function getSID(imei, token) {
 			resolve(ssid.key)
 			return
 		}
+
+		const SIDDelay = 300000 // 5 minutes delay between session id request
+		if (lastSIDRequest && new Date().getTime() < lastSIDRequest + SIDDelay) {
+			log.error('Session ID was requested less than 5 minutes ago! waiting in order to prevent "intruder lockdown"...')
+			reject(new Error('Session ID was requested less than 5 minutes ago! waiting in order to prevent "intruder lockdown"...'))
+			return
+		}
+
+		lastSIDRequest = new Date().getTime()
 
 		let body = {
 			'pvdid': 1,

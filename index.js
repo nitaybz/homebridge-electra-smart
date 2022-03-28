@@ -48,18 +48,17 @@ class ElectraSmartPlatform {
 		this.emptyState = {devices:{}}
 		this.CELSIUS_UNIT = 'C'
 		this.FAHRENHEIT_UNIT = 'F'
-		let requestedInterval = config['statePollingInterval'] === 0 ? 0 : (config['statePollingInterval'] || 30) // default polling time is 30 seconds
-		if (requestedInterval < 5) 
-			requestedInterval = 5
-		this.refreshDelay = 2000
+		let requestedInterval = config['statePollingInterval'] || 90 // default polling time is 90 seconds
+		if (requestedInterval < 30) 
+			requestedInterval = 30
 		this.locations = []
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 		this.setProcessing = false
-		this.pollingTimeout = null
+		this.pollingInterval = null
 		this.processingState = false
-		this.pollingInterval = requestedInterval ? (requestedInterval * 1000 - this.refreshDelay) : false
+		this.interval = requestedInterval * 1000
 
 		// define debug method to output debug logs when enabled in the config
 		this.log.easyDebug = (...content) => {
@@ -97,8 +96,7 @@ class ElectraSmartPlatform {
 			
 			this.syncHomeKitCache()
 
-			if (this.pollingInterval)
-				this.pollingTimeout = setTimeout(this.refreshState, this.pollingInterval)
+			this.pollingInterval = setInterval(this.refreshState, this.interval)
 			
 		})
 

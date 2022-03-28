@@ -3,9 +3,6 @@ const AirConditioner = require('../homekit/AirConditioner')
 module.exports = (platform) => {
 	return () => {
 		platform.devices.forEach(device => {
-
-			// if (!device.remoteCapabilities)
-			// 	return
 			
 			// Add AirConditioner
 			const airConditionerIsNew = !platform.activeAccessories.find(accessory => accessory.type === 'AirConditioner' && accessory.id === device.id)

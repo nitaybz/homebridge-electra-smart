@@ -1,7 +1,7 @@
 {
   "name": "homebridge-electra-smart",
   "description": "Homebridge plugin for Electra Smart A/C",
-  "version": "1.0.18",
+  "version": "2.0.0-beta.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/nitaybz/homebridge-electra-smart.git"

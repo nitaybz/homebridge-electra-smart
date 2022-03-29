@@ -81,7 +81,6 @@ function apiRequest(sid, cmd, data) {
 					resolve(response.data.data)
 				} else {
 					const error = `Failed sending API request: ${response.data.data ? response.data.data.res_desc : JSON.stringify(response.data)}`
-					ssid = null
 					reject(error)
 				}
 			})

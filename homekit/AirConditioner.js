@@ -8,6 +8,11 @@ class AirConditioner {
 		Characteristic = platform.api.hap.Characteristic
 		FAHRENHEIT_UNIT = platform.FAHRENHEIT_UNIT
 
+
+		this.HapError = () => {
+			return new platform.api.hap.HapStatusError(-70402)
+		}
+
 		const deviceInfo = unified.deviceInformation(device)
 		
 		this.log = platform.log
@@ -290,9 +295,15 @@ class AirConditioner {
 	}
 
 	updateHomeKit(state) {
-		if (!state)
+		if (!state) {
+			this.HeaterCoolerService.getCharacteristic(Characteristic.Active).updateValue(this.HapError())
+			if (this.FanService)
+				this.FanService.getCharacteristic(Characteristic.Active).updateValue(this.HapError())
+			if (this.DryService)
+				this.DryService.getCharacteristic(Characteristic.Active).updateValue(this.HapError())
 			return
-
+		}
+		
 		this.state = state
 		
 		// update measurements

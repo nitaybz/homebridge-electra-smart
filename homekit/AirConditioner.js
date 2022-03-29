@@ -99,10 +99,10 @@ class AirConditioner {
 
 		this.HeaterCoolerService.getCharacteristic(Characteristic.Active)
 			.onSet(this.stateManager.set.ACActive)
-			.updateValue(this.stateManager.get.ACActive)
+			.updateValue(this.stateManager.get.ACActive())
 
 		this.HeaterCoolerService.getCharacteristic(Characteristic.CurrentHeaterCoolerState)
-			.updateValue(this.stateManager.get.CurrentHeaterCoolerState)
+			.updateValue(this.stateManager.get.CurrentHeaterCoolerState())
 
 
 		const props = []
@@ -113,7 +113,7 @@ class AirConditioner {
 	
 		this.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState)
 			.setProps({validValues: props})
-			.updateValue(this.stateManager.get.TargetHeaterCoolerState)
+			.updateValue(this.stateManager.get.TargetHeaterCoolerState())
 			.onSet(this.stateManager.set.TargetHeaterCoolerState)
 
 
@@ -123,7 +123,7 @@ class AirConditioner {
 				maxValue: 100,
 				minStep: 0.1
 			})
-			.updateValue(this.stateManager.get.CurrentTemperature)
+			.updateValue(this.stateManager.get.CurrentTemperature())
 
 		if (this.capabilities.COOL) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
@@ -132,7 +132,7 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.updateValue(this.stateManager.get.CoolingThresholdTemperature)
+				.updateValue(this.stateManager.get.CoolingThresholdTemperature())
 				.onSet(this.stateManager.set.CoolingThresholdTemperature)
 		}
 
@@ -143,7 +143,7 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.updateValue(this.stateManager.get.HeatingThresholdTemperature)
+				.updateValue(this.stateManager.get.HeatingThresholdTemperature())
 				.onSet(this.stateManager.set.HeatingThresholdTemperature)
 		}
 
@@ -154,7 +154,7 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.updateValue(this.stateManager.get.CoolingThresholdTemperature)
+				.updateValue(this.stateManager.get.CoolingThresholdTemperature())
 				.onSet(this.stateManager.set.CoolingThresholdTemperature)
 
 		}
@@ -166,38 +166,41 @@ class AirConditioner {
 					maxValue: this.maxTemp,
 					minStep: this.usesFahrenheit ? 0.1 : 1
 				})
-				.updateValue(this.stateManager.get.HeatingThresholdTemperature)
+				.updateValue(this.stateManager.get.HeatingThresholdTemperature())
 				.onSet(this.stateManager.set.HeatingThresholdTemperature)
 		}
 
 		// this.HeaterCoolerService.getCharacteristic(Characteristic.TemperatureDisplayUnits)
-		// 	.updateValue(this.stateManager.get.TemperatureDisplayUnits)
+		// 	.updateValue(this.stateManager.get.TemperatureDisplayUnits())
 
 		// this.HeaterCoolerService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-		// 	.updateValue(this.stateManager.get.CurrentRelativeHumidity)
+		// 	.updateValue(this.stateManager.get.CurrentRelativeHumidity())
 
 
 		if ((this.capabilities.COOL && this.capabilities.COOL.swing) || (this.capabilities.HEAT && this.capabilities.HEAT.swing)) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.SwingMode)
-				.updateValue(this.stateManager.get.ACSwing)
+				.updateValue(this.stateManager.get.ACSwing())
 				.onSet(this.stateManager.set.ACSwing)
 		}
 
 		if (	(this.capabilities.COOL && this.capabilities.COOL.fanSpeeds) || (this.capabilities.HEAT && this.capabilities.HEAT.fanSpeeds)) {
 			this.HeaterCoolerService.getCharacteristic(Characteristic.RotationSpeed)
-				.updateValue(this.stateManager.get.ACRotationSpeed)
+				.updateValue(this.stateManager.get.ACRotationSpeed())
 				.onSet(this.stateManager.set.ACRotationSpeed)
 		}
 
 		if (this.filterService) {
+
+			this.HeaterCoolerService.addOptionalCharacteristic(Characteristic.FilterChangeIndication)
+
 			this.HeaterCoolerService.getCharacteristic(Characteristic.FilterChangeIndication)
-				.updateValue(this.stateManager.get.FilterChangeIndication)
+				.updateValue(this.stateManager.get.FilterChangeIndication())
 	
 			// this.HeaterCoolerService.getCharacteristic(Characteristic.FilterLifeLevel)
-			// 	.updateValue(this.stateManager.get.FilterLifeLevel)
+			// 	.updateValue(this.stateManager.get.FilterLifeLevel())
 
-			this.HeaterCoolerService.getCharacteristic(Characteristic.ResetFilterIndication)
-				.onSet(this.stateManager.set.ResetFilterIndication)
+			// this.HeaterCoolerService.getCharacteristic(Characteristic.ResetFilterIndication)
+			// 	.onSet(this.stateManager.set.ResetFilterIndication)
 		}
 
 	}
@@ -210,18 +213,18 @@ class AirConditioner {
 			this.FanService = this.accessory.addService(Service.Fanv2, this.roomName + ' Fan', 'Fan')
 
 		this.FanService.getCharacteristic(Characteristic.Active)
-			.updateValue(this.stateManager.get.FanActive)
+			.updateValue(this.stateManager.get.FanActive())
 			.onSet(this.stateManager.set.FanActive)
 
 		if (this.capabilities.FAN.swing) {
 			this.FanService.getCharacteristic(Characteristic.SwingMode)
-				.updateValue(this.stateManager.get.FanSwing)
+				.updateValue(this.stateManager.get.FanSwing())
 				.onSet(this.stateManager.set.FanSwing)
 		}
 
 		if (this.capabilities.FAN.fanSpeeds) {
 			this.FanService.getCharacteristic(Characteristic.RotationSpeed)
-				.updateValue(this.stateManager.get.FanRotationSpeed)
+				.updateValue(this.stateManager.get.FanRotationSpeed())
 				.onSet(this.stateManager.set.FanRotationSpeed)
 		}
 
@@ -244,15 +247,15 @@ class AirConditioner {
 			this.DryService = this.accessory.addService(Service.HumidifierDehumidifier, this.roomName + ' Dry', 'Dry')
 
 		this.DryService.getCharacteristic(Characteristic.Active)
-			.updateValue(this.stateManager.get.DryActive)
+			.updateValue(this.stateManager.get.DryActive())
 			.onSet(this.stateManager.set.DryActive)
 
 
 		this.DryService.getCharacteristic(Characteristic.CurrentRelativeHumidity)
-			.updateValue(this.stateManager.get.CurrentRelativeHumidity)
+			.updateValue(this.stateManager.get.CurrentRelativeHumidity())
 
 		this.DryService.getCharacteristic(Characteristic.CurrentHumidifierDehumidifierState)
-			.updateValue(this.stateManager.get.CurrentHumidifierDehumidifierState)
+			.updateValue(this.stateManager.get.CurrentHumidifierDehumidifierState())
 
 		this.DryService.getCharacteristic(Characteristic.TargetHumidifierDehumidifierState)
 			.setProps({
@@ -260,18 +263,18 @@ class AirConditioner {
 				maxValue: 2,
 				validValues: [Characteristic.TargetHumidifierDehumidifierState.DEHUMIDIFIER]
 			})
-			.updateValue(this.stateManager.get.TargetHumidifierDehumidifierState)
+			.updateValue(this.stateManager.get.TargetHumidifierDehumidifierState())
 			.onSet(this.stateManager.set.TargetHumidifierDehumidifierState)
 
 		if (this.capabilities.DRY.swing) {
 			this.DryService.getCharacteristic(Characteristic.SwingMode)
-				.updateValue(this.stateManager.get.DrySwing)
+				.updateValue(this.stateManager.get.DrySwing())
 				.onSet(this.stateManager.set.DrySwing)
 		}
 
 		if (this.capabilities.DRY.fanSpeeds) {
 			this.DryService.getCharacteristic(Characteristic.RotationSpeed)
-				.updateValue(this.stateManager.get.DryRotationSpeed)
+				.updateValue(this.stateManager.get.DryRotationSpeed())
 				.onSet(this.stateManager.set.DryRotationSpeed)
 		}
 
@@ -338,7 +341,7 @@ class AirConditioner {
 				// update filter characteristics for HeaterCoolerService
 				if (this.filterService) {
 					this.updateValue('HeaterCoolerService', 'FilterChangeIndication', Characteristic.FilterChangeIndication[this.state.filterChange])
-					this.updateValue('HeaterCoolerService', 'FilterLifeLevel', this.state.filterLifeLevel)
+					// this.updateValue('HeaterCoolerService', 'FilterLifeLevel', this.state.filterLifeLevel)
 				}
 
 				// set proper target and current state of HeaterCoolerService

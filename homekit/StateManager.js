@@ -23,37 +23,30 @@ module.exports = (device, platform) => {
 	const log = platform.log
 	const ElectraApi = platform.ElectraApi
 	const setTimeoutDelay = 500
-	let preventTurningOff, setCommandPromise
+	let preventTurningOff, setCommandPromise, newState
 
 	const setCommand = (changes) => {
-		let changeExist = false
-		const state = {
+		newState = {
 			...device.state
 		}
-		Object.keys(changes).forEach(key => { 
-			if (key in state && state[key] === changes[key])
-				return
-			changeExist = true
-			state[key] = changes[key]
+		Object.keys(changes).forEach(key => {
+			newState[key] = changes[key]
 			// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
-			if (key === 'fanSpeed' && changes[key] === 0 && device.capabilities[state.mode].autoFanSpeed)
+			if (key === 'fanSpeed' && changes[key] === 0 && device.capabilities[newState.mode].autoFanSpeed)
 				preventTurningOff = true
 		})
-
-		if (!changeExist)
-			return
-
+		
 		if (!setCommandPromise) {
 			setCommandPromise = new Promise((resolve, reject) => {
 				platform.setProcessing = true
 				setTimeout(async function () {
 					// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
-					if (preventTurningOff && state.active === false) {
-						state.active = true
+					if (preventTurningOff && newState.active === false) {
+						newState.active = true
 						preventTurningOff = false
 					}
 
-					const formattedState = unified.formattedState(device)
+					const formattedState = unified.formattedState(device, newState)
 					log(device.name, ' -> Setting New State:')
 					log(JSON.stringify(formattedState, null, 2))
 
@@ -66,12 +59,17 @@ module.exports = (device, platform) => {
 						log.easyDebug(err)
 						platform.setProcessing = false
 						device.updateHomeKit(device.state)
+						setCommandPromise = null
+						newState = null
 						reject(err)
+						return
 					}
+					setCommandPromise = null
+					device.updateHomeKit(newState)
 					resolve(true)
 					setTimeout(() => {
 						platform.setProcessing = false
-						device.updateHomeKit(state)
+						newState = null
 					}, 1000)
 				}, setTimeoutDelay)
 			})
@@ -134,7 +132,7 @@ module.exports = (device, platform) => {
 			},
 
 			CurrentRelativeHumidity: () => {
-				return device.state.relativeHumidity
+				return device.state.relativeHumidity || 0
 			},
 
 			ACSwing: () => {
@@ -151,7 +149,7 @@ module.exports = (device, platform) => {
 
 			FilterChangeIndication: () => {
 				const filterChange = device.state.filterChange
-				return filterChange
+				return Characteristic.FilterChangeIndication[filterChange]
 			},
 
 			FilterLifeLevel: () => {
@@ -221,7 +219,7 @@ module.exports = (device, platform) => {
 					const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
 					const mode = characteristicToMode(lastMode)
 					log.easyDebug(device.name + ' -> Setting Mode to', mode)
-					return setCommand({active: false, mode})
+					return setCommand({active: true, mode})
 				} else if (device.state.mode === 'COOL' || device.state.mode === 'HEAT' || device.state.mode === 'AUTO')
 					return setCommand({active: false})
 			},

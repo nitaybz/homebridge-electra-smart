@@ -1,10 +1,8 @@
-<style>
+<!-- <style>
   .hidden {display: none;}
 </style>
 
 <div class="card card-body">
-
-  <!-- shown when setup is complete or the plugin is already configured -->
   <div id="setupComplete" style="display:none;">
     <form id="configForm">
       <div class="form-group">
@@ -76,7 +74,6 @@
     </form>
   </div>
 
-  <!-- shown when the plugin is not configured -->
   <div id="setupRequired" style="display:none;">
     <h3>Welcome to Electra Smart Plugin</h3>
     <h5>To get this plugin to work, You'll need <b>token</b> and <b>IMEI</b> which can be extracted following this form:</h5>
@@ -291,6 +288,169 @@
 
       // trigger save
       await homebridge.savePluginConfig();
+
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('setupRequired').style.display = 'none';
+      document.getElementById('setupComplete').style.display = 'block';
+      homebridge.hideSpinner()
+
+    } catch (e) {
+      homebridge.hideSpinner()
+      homebridge.toast.error(e.error || e.message, 'Error');
+    }
+
+    document.getElementById('step2Submit').removeAttribute('disabled');
+  });
+
+</script>
+
+
+
+
+
+
+
+
+ -->
+ <style>
+  .hidden {display: none;}
+</style>
+
+<div>
+
+  <!-- shown when setup is complete or the plugin is already configured -->
+  <div id="setupComplete" style="display:none;">
+    <h5><i class="fa fa-check green-text"></i> Homebridge is authorized to control Electra Smart Devices</h5>
+    <a id="startOver" class="btn btn-blue">Generate New Token</a>
+  </div>
+
+  <!-- shown when the plugin is not configured -->
+  <div id="setupRequired" style="display:none;">
+    <h3>Welcome to Electra Smart Plugin</h3>
+    <h5>To get this plugin to work, You'll need <b>token</b> and <b>IMEI</b> which can be extracted following this form:</h5>
+    <hr>
+    <div id="step1">
+      <div class="form-group">
+        <label for="phoneNumberInput">Phone Number</label>
+        <input type="text" class="form-control" id="phoneNumberInput" aria-describedby="phoneNumberHelp" required>
+        <small id="phoneNumberHelp" class="form-text text-muted">Please insert the phone number registered to Electra Smart (e.g. 0524001234).</small>
+      </div>
+      <div class="text-center">
+        <a id="skip" class="btn btn-elegant">Skip</a>
+        <button id="step1Submit" type="submit" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+
+    <div id="step2" style="display:none;">
+      <div class="form-group">
+        <label for="otpInput">OTP Code</label>
+        <input type="text" class="form-control" id="otpInput" aria-describedby="otpHelp">
+        <small id="otpHelp" class="form-text text-muted">Please enter the OTP code received at your phone.</small>
+      </div>
+      <div class="text-center">
+        <a id="skip2" class="btn btn-elegant">Skip</a>
+        <button id="step2Submit" type="submit" class="btn btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+  let pluginConfig
+
+  (async () => {
+    // get the initial config - this is an array potentially containing multiple config blocks
+    pluginConfig = await homebridge.getPluginConfig();
+
+    if (!pluginConfig.length || !pluginConfig[0].token || !pluginConfig[0].imei) {
+      pluginConfig.push({platform: 'ElectraSmart'});
+      await homebridge.updatePluginConfig(pluginConfig);
+      document.getElementById('setupRequired').style.display = 'block';
+    } else {
+      document.getElementById('setupComplete').style.display = 'block';
+      homebridge.showSchemaForm();
+    }
+
+    window.homebridge.addEventListener('configChanged', async (event) => {
+      console.log('Updated config:', event.data);
+      await homebridge.updatePluginConfig(event.data);
+    });
+  })();
+
+  // skip
+  document.getElementById('skip').addEventListener('click', async () => {
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('setupRequired').style.display = 'none';
+      document.getElementById('setupComplete').style.display = 'block';
+      homebridge.showSchemaForm();
+  });
+
+
+  // skip2
+  document.getElementById('skip2').addEventListener('click', async () => {
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('setupRequired').style.display = 'none';
+      document.getElementById('setupComplete').style.display = 'block';
+      homebridge.showSchemaForm();
+  });
+
+  // startOver
+  document.getElementById('startOver').addEventListener('click', async () => {
+      document.getElementById('setupRequired').style.display = 'block';
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('setupComplete').style.display = 'none';
+  });
+
+  // step 1 submit handler
+  document.getElementById('step1Submit').addEventListener('click', async () => {
+    const phoneValue = document.getElementById('phoneNumberInput').value;
+
+    if (!phoneValue) {
+      homebridge.toast.error('Please enter a valid phone number.', 'Error');
+      return;
+    }
+
+    document.getElementById('step1Submit').setAttribute('disabled', 'disabled');
+
+    try {
+      homebridge.showSpinner()
+      await homebridge.request('/request-otp', { phone: phoneValue });
+      homebridge.hideSpinner()
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+    } catch (e) {
+      homebridge.hideSpinner()
+      homebridge.toast.error(e.message, 'Error');
+    }
+
+    document.getElementById('step1Submit').removeAttribute('disabled');
+  });
+
+  // step 2 submit handler
+  document.getElementById('step2Submit').addEventListener('click', async () => {
+    const phoneValue = document.getElementById('phoneNumberInput').value;
+    const otpValue = document.getElementById('otpInput').value;
+
+    if (!otpValue) {
+      homebridge.toast.error('Please enter a valid OTP code.', 'Error');
+      return;
+    }
+
+    document.getElementById('step2Submit').setAttribute('disabled', 'disabled');
+
+    try {
+      homebridge.showSpinner()
+      const response = await homebridge.request('/check-otp', { phone: phoneValue, code: otpValue });
+
+      // update the config
+      pluginConfig[0].imei = response.imei;
+      pluginConfig[0].token = response.token;
+
+      // update the config
+      await homebridge.updatePluginConfig(pluginConfig);
+      homebridge.showSchemaForm();
 
       document.getElementById('step2').style.display = 'none';
       document.getElementById('setupRequired').style.display = 'none';

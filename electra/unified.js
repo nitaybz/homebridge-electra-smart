@@ -56,7 +56,6 @@ function fanSpeedToHK(value, fanSpeeds) {
 }
 
 function HKToFanSpeed(value, fanSpeeds) {
-
 	let selected = 'AUTO'
 	if (!fanSpeeds.includes('AUTO'))
 		selected = fanSpeeds[0]
@@ -165,23 +164,17 @@ module.exports = {
 		if ('FANSPD' in deviceState)
 			state.fanSpeed = fanSpeedToHK(deviceState.FANSPD, modeCapabilities.fanSpeeds)
 
-		if (device.filtersCleaning) {
+		if (device.filterService) {
 			state.filterChange = deviceState.CLEAR_FILT === 'ON' ? 'CHANGE_FILTER' : 'FILTER_OK'
-			// const acOnSecondsSinceLastFiltersClean = device.filtersCleaning.acOnSecondsSinceLastFiltersClean
-			// const filtersCleanSecondsThreshold = device.filtersCleaning.filtersCleanSecondsThreshold
-			// if (acOnSecondsSinceLastFiltersClean > filtersCleanSecondsThreshold)
-			// 	state.filterLifeLevel = 0
-			// else
-			// 	state.filterLifeLevel =  100 - Math.floor(acOnSecondsSinceLastFiltersClean/filtersCleanSecondsThreshold*100)
 		}
 
 		return state
 	},
 
-	formattedState: (device) => {
+	formattedState: (device, newState) => {
 		const lastState = JSON.parse(device.rawState.OPER).OPER
 		
-		if (!device.state.active) {
+		if (!newState.active) {
 			if ('TURN_ON_OFF' in lastState)
 				lastState.TURN_ON_OFF = 'OFF'
 			else 
@@ -194,13 +187,13 @@ module.exports = {
 
 		const acState = {
 			...lastState,
-			AC_MODE: device.state.mode,
-			SPT: typeof lastState.SPT === 'string' ? device.state.targetTemperature.toString() : device.state.targetTemperature
+			AC_MODE: newState.mode,
+			SPT: typeof lastState.SPT === 'string' ? newState.targetTemperature.toString() : newState.targetTemperature
 		}
 
-		if ('swing' in device.capabilities[device.state.mode] && device.capabilities[device.state.mode].swing) {
+		if ('swing' in device.capabilities[newState.mode] && device.capabilities[newState.mode].swing) {
 			
-			const swingState = device.state.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
+			const swingState = newState.swing === 'SWING_ENABLED' ? 'ON' : 'OFF'
 
 			switch (device.swingDirection) {
 				case 'vertical':
@@ -223,9 +216,10 @@ module.exports = {
 					break
 			}
 		}
-
-		if ('fanSpeeds' in device.capabilities[device.state.mode] && device.capabilities[device.state.mode].fanSpeeds.length)
-			acState['FANSPD'] = HKToFanSpeed(device.state.fanSpeed, device.capabilities[device.state.mode].fanSpeeds)
+		
+		if ('fanSpeeds' in device.capabilities[newState.mode] && device.capabilities[newState.mode].fanSpeeds.length) {
+			acState['FANSPD'] = HKToFanSpeed(newState.fanSpeed, device.capabilities[newState.mode].fanSpeeds)
+		}
 
 		return acState
 	}

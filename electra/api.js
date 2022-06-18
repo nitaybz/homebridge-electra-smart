@@ -101,8 +101,8 @@ function getSID(imei, token) {
 			return
 		}
 
-		const SIDDelay = 300000 // 5 minutes delay between session id request
-		if (lastSIDRequest && new Date().getTime() < lastSIDRequest + SIDDelay) {
+		const SIDDelay = 600000 // 10 minutes delay between session id request
+		if (lastSIDRequest && new Date().getTime() < (lastSIDRequest + SIDDelay)) {
 			log.error('Session ID was requested less than 5 minutes ago! waiting in order to prevent "intruder lockdown"...')
 			reject(new Error('Session ID was requested less than 5 minutes ago! waiting in order to prevent "intruder lockdown"...'))
 			return

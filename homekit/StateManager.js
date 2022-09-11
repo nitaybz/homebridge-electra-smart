@@ -46,6 +46,11 @@ module.exports = (device, platform) => {
 						preventTurningOff = false
 					}
 
+					if (!newState) {
+						reject(new Error("Can't set empty state"))
+						return
+					}
+
 					const formattedState = unified.formattedState(device, newState)
 					log(device.name, ' -> Setting New State:')
 					log(JSON.stringify(formattedState, null, 2))

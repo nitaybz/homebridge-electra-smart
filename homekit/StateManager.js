@@ -119,17 +119,17 @@ module.exports = (device, platform) => {
 
 			CurrentTemperature: () => {
 				const currentTemp = device.state.currentTemperature
-				return currentTemp
+				return Number.isFinite(currentTemp) ? currentTemp : 0
 			},
 
 			CoolingThresholdTemperature: () => {
 				const targetTemp = device.state.targetTemperature
-				return targetTemp
+				return Number.isFinite(targetTemp) ? targetTemp : 24
 			},
 
 			HeatingThresholdTemperature: () => {
 				const targetTemp = device.state.targetTemperature
-				return targetTemp
+				return Number.isFinite(targetTemp) ? targetTemp : 24
 			},
 
 			TemperatureDisplayUnits: () => {
@@ -142,24 +142,26 @@ module.exports = (device, platform) => {
 
 			ACSwing: () => {
 				const swing = device.state.swing
-				return Characteristic.SwingMode[swing]
+				const mapped = Characteristic.SwingMode[swing]
+				return Number.isFinite(mapped) ? mapped : Characteristic.SwingMode.SWING_DISABLED
 			},
 
 			ACRotationSpeed: () => {
 				const fanSpeed = device.state.fanSpeed
-				return fanSpeed
+				return Number.isFinite(fanSpeed) ? fanSpeed : 0
 			},
 
 			// FILTER
 
 			FilterChangeIndication: () => {
 				const filterChange = device.state.filterChange
-				return Characteristic.FilterChangeIndication[filterChange]
+				const mapped = Characteristic.FilterChangeIndication[filterChange]
+				return Number.isFinite(mapped) ? mapped : Characteristic.FilterChangeIndication.FILTER_OK
 			},
 
 			FilterLifeLevel: () => {
 				const filterLifeLevel = device.state.filterLifeLevel
-				return filterLifeLevel
+				return Number.isFinite(filterLifeLevel) ? filterLifeLevel : 100
 			},
 
 

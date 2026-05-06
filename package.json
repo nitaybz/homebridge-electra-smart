@@ -1,7 +1,7 @@
 {
   "name": "homebridge-electra-smart",
   "description": "Homebridge plugin for Electra Smart A/C",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/nitaybz/homebridge-electra-smart.git"
@@ -21,17 +21,17 @@
     "url": "https://github.com/nitaybz/homebridge-electra-smart/issues"
   },
   "engines": {
-    "node": ">=10.17.0",
-    "homebridge": ">=0.4.4"
+    "node": "^22.10.0 || ^24.0.0",
+    "homebridge": "^1.8.0 || ^2.0.0"
   },
   "dependencies": {
-    "@homebridge/plugin-ui-utils": "0.0.4",
-    "axios": "^0.20.0",
-    "inquirer": "^7.3.3",
-    "node-persist": "^3.0.5"
+    "@homebridge/plugin-ui-utils": "^2.0.1",
+    "axios": "^1.16.0",
+    "inquirer": "^9.3.7",
+    "node-persist": "^4.0.4"
   },
   "devDependencies": {
-    "eslint": "^7.1.0"
+    "eslint": "^8.57.1"
   },
   "scripts": {
     "lint": "eslint .",

@@ -172,7 +172,14 @@ module.exports = {
 	},
 
 	formattedState: (device, newState) => {
-		const lastState = JSON.parse(device.rawState.OPER).OPER
+		let lastState
+		try {
+			lastState = JSON.parse(device.rawState.OPER).OPER
+		} catch (err) {
+			device.log.error('Error: cannot read last state from rawState, falling back to a minimal command')
+			device.log.error(err.stack || err.message)
+			lastState = {}
+		}
 		
 		if (!newState.active) {
 			if ('TURN_ON_OFF' in lastState)

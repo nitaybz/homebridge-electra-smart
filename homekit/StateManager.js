@@ -26,13 +26,19 @@ module.exports = (device, platform) => {
 	let preventTurningOff, setCommandPromise, newState
 
 	const setCommand = (changes) => {
-		newState = {
-			...device.state
+		// Accumulate across rapid successive setCommand calls (e.g. when a
+		// HomeKit scene sets mode + temperature + fanSpeed together) instead
+		// of resetting newState every time, otherwise only the last change
+		// survives the debounced setTimeout below.
+		if (!newState) {
+			newState = {
+				...device.state
+			}
 		}
 		Object.keys(changes).forEach(key => {
 			newState[key] = changes[key]
 			// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
-			if (key === 'fanSpeed' && changes[key] === 0 && device.capabilities[newState.mode].autoFanSpeed)
+			if (key === 'fanSpeed' && changes[key] === 0 && device.capabilities[newState.mode] && device.capabilities[newState.mode].autoFanSpeed)
 				preventTurningOff = true
 		})
 		

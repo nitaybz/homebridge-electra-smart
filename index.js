@@ -1,6 +1,7 @@
 const ElectraApi = require('./electra/api')
 const syncHomeKitCache = require('./electra/syncHomeKitCache')
 const refreshState = require('./electra/refreshState')
+const migrateLegacyPersist = require('./lib/persistMigration')
 const path = require('path')
 const storage = require('node-persist')
 const PLUGIN_NAME = 'homebridge-electra-smart'
@@ -79,6 +80,7 @@ class ElectraSmartPlatform {
 				forgiveParseErrors: true
 			})
 
+			await migrateLegacyPersist(this.persistPath, this.storage, this.log.easyDebug)
 
 			this.cachedState = await this.storage.getItem('electra-state') || this.emptyState
 			if (!this.cachedState.devices)

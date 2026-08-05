@@ -374,15 +374,10 @@ class AirConditioner {
 				// Fan accessory: speed-only mode keeps it in sync with AC fan speed;
 				// otherwise turn it off while in heat/cool/auto
 				if (this.FanService) {
-					if (this.fanSpeedOnly) {
-						this.updateValue('FanService', 'Active', 1)
-						if (this.capabilities.FAN && this.capabilities.FAN.swing)
-							this.updateValue('FanService', 'SwingMode', Characteristic.SwingMode[this.state.swing])
-						if (this.capabilities.FAN && this.capabilities.FAN.fanSpeeds)
-							this.updateValue('FanService', 'RotationSpeed', this.state.fanSpeed)
-					} else {
+					if (this.fanSpeedOnly)
+						this.updateFanSpeedOnlyService()
+					else
 						this.updateValue('FanService', 'Active', 0)
-					}
 				}
 
 				// turn off DryService
@@ -439,15 +434,10 @@ class AirConditioner {
 
 				// Fan accessory: keep in sync when speed-only, otherwise turn off
 				if (this.FanService) {
-					if (this.fanSpeedOnly) {
-						this.updateValue('FanService', 'Active', 1)
-						if (this.capabilities.FAN && this.capabilities.FAN.swing)
-							this.updateValue('FanService', 'SwingMode', Characteristic.SwingMode[this.state.swing])
-						if (this.capabilities.FAN && this.capabilities.FAN.fanSpeeds)
-							this.updateValue('FanService', 'RotationSpeed', this.state.fanSpeed)
-					} else {
+					if (this.fanSpeedOnly)
+						this.updateFanSpeedOnlyService()
+					else
 						this.updateValue('FanService', 'Active', 0)
-					}
 				}
 
 				break
@@ -455,6 +445,18 @@ class AirConditioner {
 
 		// cache last state to storage
 		this.storage.setItem('electra-state', this.cachedState)
+	}
+
+	// In fanSpeedOnly mode the Fan service is a speed control for whatever mode the
+	// device is in, so it tracks the device instead of representing FAN mode.
+	updateFanSpeedOnlyService() {
+		this.updateValue('FanService', 'Active', 1)
+
+		if (this.capabilities.FAN.swing)
+			this.updateValue('FanService', 'SwingMode', Characteristic.SwingMode[this.state.swing])
+
+		if (this.capabilities.FAN.fanSpeeds)
+			this.updateValue('FanService', 'RotationSpeed', this.state.fanSpeed)
 	}
 
 	updateValue (serviceName, characteristicName, newValue) {

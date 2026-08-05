@@ -104,7 +104,7 @@ Since HomeKit control over fan speed is with a slider between 0-100, the plugin 
 
 *Available fan speeds: AUTO, LOW, MED, HIGH*
 
-By default, the Fan accessory switches the AC to FAN mode. Set `fanSpeedOnly` to `true` if you want that accessory to only adjust fan speed (and swing) while leaving the current mode (COOL/HEAT/AUTO/etc.) unchanged.
+By default, the Fan accessory switches the AC to FAN mode. Set `fanSpeedOnly` to `true` if you want that accessory to only adjust fan speed (and swing) while leaving the current mode (COOL/HEAT/AUTO/etc.) unchanged. In this mode the Fan accessory follows the device power state and its On/Off switch does nothing - use the AC accessory to turn the device on and off.
 
 ### Swing
 Swing support is added automatically if supported.

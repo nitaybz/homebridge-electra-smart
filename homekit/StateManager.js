@@ -46,18 +46,26 @@ module.exports = (device, platform) => {
 			setCommandPromise = new Promise((resolve, reject) => {
 				platform.setProcessing = true
 				setTimeout(async function () {
-					// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
-					if (preventTurningOff && newState.active === false) {
-						newState.active = true
-						preventTurningOff = false
-					}
+					// Take ownership of the accumulated batch before doing anything
+					// async, so commands arriving while this one is in flight start a
+					// fresh batch from the device state instead of racing this one.
+					const stateToSet = newState
+					newState = null
+					setCommandPromise = null
 
-					if (!newState) {
+					if (!stateToSet) {
+						platform.setProcessing = false
 						reject(new Error("Can't set empty state"))
 						return
 					}
 
-					const formattedState = unified.formattedState(device, newState)
+					// Make sure device is not turning off when setting fanSpeed to 0 (AUTO)
+					if (preventTurningOff && stateToSet.active === false) {
+						stateToSet.active = true
+						preventTurningOff = false
+					}
+
+					const formattedState = unified.formattedState(device, stateToSet)
 					log(device.name, ' -> Setting New State:')
 					log(JSON.stringify(formattedState, null, 2))
 
@@ -70,22 +78,30 @@ module.exports = (device, platform) => {
 						log.easyDebug(err)
 						platform.setProcessing = false
 						device.updateHomeKit(device.state)
-						setCommandPromise = null
-						newState = null
 						reject(err)
 						return
 					}
-					setCommandPromise = null
-					device.updateHomeKit(newState)
+					device.updateHomeKit(stateToSet)
 					resolve(true)
 					setTimeout(() => {
 						platform.setProcessing = false
-						newState = null
 					}, 1000)
 				}, setTimeoutDelay)
 			})
 		}
 		return setCommandPromise
+	}
+
+	// Mode to use for commands coming from the HeaterCooler service. The device's
+	// own mode wins when it's already a heat/cool mode, since the HomeKit
+	// characteristic defaults to AUTO and would otherwise clobber the real mode.
+	const heaterCoolerMode = () => {
+		const mode = device.state.mode
+		if (mode === 'COOL' || mode === 'HEAT' || mode === 'AUTO')
+			return mode
+
+		const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
+		return characteristicToMode(lastMode)
 	}
 
 	return {
@@ -234,8 +250,7 @@ module.exports = (device, platform) => {
 				log.easyDebug(device.name + ' -> Setting AC state Active:', state)
 
 				if (state) {
-					const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
-					const mode = characteristicToMode(lastMode)
+					const mode = heaterCoolerMode()
 					log.easyDebug(device.name + ' -> Setting Mode to', mode)
 					return setCommand({active: true, mode})
 				} else if (device.state.mode === 'COOL' || device.state.mode === 'HEAT' || device.state.mode === 'AUTO')
@@ -255,8 +270,7 @@ module.exports = (device, platform) => {
 				else
 					log.easyDebug(device.name + ' -> Setting Cooling Threshold Temperature:', targetTemperature + 'ºC')
 
-				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
-				const mode = characteristicToMode(lastMode)
+				const mode = heaterCoolerMode()
 				log.easyDebug(device.name + ' -> Setting Mode to: ' + mode)
 				return setCommand({active: true, mode, targetTemperature})
 			},
@@ -267,8 +281,7 @@ module.exports = (device, platform) => {
 				else
 					log.easyDebug(device.name + ' -> Setting Heating Threshold Temperature:', targetTemperature + 'ºC')
 
-				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
-				const mode = characteristicToMode(lastMode)
+				const mode = heaterCoolerMode()
 				log.easyDebug(device.name + ' -> Setting Mode to: ' + mode)
 				return setCommand({active: true, mode, targetTemperature})
 			},
@@ -278,8 +291,7 @@ module.exports = (device, platform) => {
 				const swing = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
 				log.easyDebug(device.name + ' -> Setting AC Swing:', swing)
 
-				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
-				const mode = characteristicToMode(lastMode)
+				const mode = heaterCoolerMode()
 				log.easyDebug(device.name + ' -> Setting Mode to', mode)
 
 				return setCommand({active: true, mode, swing})
@@ -288,8 +300,7 @@ module.exports = (device, platform) => {
 			ACRotationSpeed: (fanSpeed) => {
 				log.easyDebug(device.name + ' -> Setting AC Rotation Speed:', fanSpeed + '%')
 
-				const lastMode = device.HeaterCoolerService.getCharacteristic(Characteristic.TargetHeaterCoolerState).value
-				const mode = characteristicToMode(lastMode)
+				const mode = heaterCoolerMode()
 				log.easyDebug(device.name + ' -> Setting Mode to', mode)
 
 				return setCommand({active: true, mode, fanSpeed})
@@ -308,8 +319,11 @@ module.exports = (device, platform) => {
 				state = !!state
 				log.easyDebug(device.name + ' -> Setting Fan state Active:', state)
 				if (device.fanSpeedOnly) {
-					// Speed-only: toggle power without switching to FAN mode
-					return setCommand({active: state})
+					// Speed-only: this accessory is a fan speed control, so it must not
+					// change the device power or mode. Report the real state back to HomeKit.
+					log.easyDebug(device.name + ' -> Ignoring Fan Active (fanSpeedOnly)')
+					setTimeout(() => device.updateHomeKit(device.state), 100)
+					return
 				}
 				if (state) {
 					log.easyDebug(device.name + ' -> Setting Mode to: FAN')
@@ -322,8 +336,8 @@ module.exports = (device, platform) => {
 				const swing = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
 				log.easyDebug(device.name + ' -> Setting Fan Swing:', swing)
 				if (device.fanSpeedOnly) {
-					// Speed-only: change swing without switching to FAN mode
-					return setCommand({active: true, swing})
+					// Speed-only: change swing without touching mode or power
+					return setCommand({swing})
 				}
 				log.easyDebug(device.name + ' -> Setting Mode to: FAN')
 				return setCommand({active: true, mode: 'FAN', swing})
@@ -332,8 +346,8 @@ module.exports = (device, platform) => {
 			FanRotationSpeed: (fanSpeed) => {
 				log.easyDebug(device.name + ' -> Setting Fan Rotation Speed:', fanSpeed + '%')
 				if (device.fanSpeedOnly) {
-					// Speed-only: change fan speed without switching to FAN mode
-					return setCommand({active: true, fanSpeed})
+					// Speed-only: change fan speed without touching mode or power
+					return setCommand({fanSpeed})
 				}
 				log.easyDebug(device.name + ' -> Setting Mode to: FAN')
 				return setCommand({active: true, mode: 'FAN', fanSpeed})

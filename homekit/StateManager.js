@@ -176,6 +176,11 @@ module.exports = (device, platform) => {
 				const active = device.state.active
 				const mode = device.state.mode
 
+				// When fanSpeedOnly is enabled, the Fan accessory mirrors device power
+				// and only controls fan speed — it does not represent FAN mode.
+				if (device.fanSpeedOnly)
+					return active ? 1 : 0
+
 				return (!active || mode !== 'FAN') ? 0 : 1
 			},
 
@@ -302,6 +307,10 @@ module.exports = (device, platform) => {
 			FanActive: (state) => {
 				state = !!state
 				log.easyDebug(device.name + ' -> Setting Fan state Active:', state)
+				if (device.fanSpeedOnly) {
+					// Speed-only: toggle power without switching to FAN mode
+					return setCommand({active: state})
+				}
 				if (state) {
 					log.easyDebug(device.name + ' -> Setting Mode to: FAN')
 					return setCommand({active: true, mode: 'FAN'})
@@ -312,12 +321,20 @@ module.exports = (device, platform) => {
 			FanSwing: (state) => {
 				const swing = state === Characteristic.SwingMode.SWING_ENABLED ? 'SWING_ENABLED' : 'SWING_DISABLED'
 				log.easyDebug(device.name + ' -> Setting Fan Swing:', swing)
+				if (device.fanSpeedOnly) {
+					// Speed-only: change swing without switching to FAN mode
+					return setCommand({active: true, swing})
+				}
 				log.easyDebug(device.name + ' -> Setting Mode to: FAN')
 				return setCommand({active: true, mode: 'FAN', swing})
 			},
 
 			FanRotationSpeed: (fanSpeed) => {
 				log.easyDebug(device.name + ' -> Setting Fan Rotation Speed:', fanSpeed + '%')
+				if (device.fanSpeedOnly) {
+					// Speed-only: change fan speed without switching to FAN mode
+					return setCommand({active: true, fanSpeed})
+				}
 				log.easyDebug(device.name + ' -> Setting Mode to: FAN')
 				return setCommand({active: true, mode: 'FAN', fanSpeed})
 			},

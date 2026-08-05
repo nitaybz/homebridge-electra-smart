@@ -13,6 +13,7 @@
       "imei": "2b950000*************",
       "token": "**************************",
       "disableFan": false,
+      "fanSpeedOnly": false,
       "disableDry": false,
       "minTemperature": 16,
       "maxTemperature": 30,

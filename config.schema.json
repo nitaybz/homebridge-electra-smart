@@ -27,6 +27,13 @@
                 "default": false,
                 "required": false
             },
+            "fanSpeedOnly": {
+                "title": "Fan Accessory Controls Speed Only",
+                "description": "When checked, the Fan accessory only adjusts fan speed (and swing) without switching the AC to FAN mode",
+                "type": "boolean",
+                "default": false,
+                "required": false
+            },
             "disableDry": {
                 "title": "Disable Dry Accessory",
                 "description": "Disable DRY mode control - remove extra dehumidifier accessory",
@@ -96,6 +103,9 @@
 		},
 		{
 			"key": "disableFan"
+		},
+		{
+			"key": "fanSpeedOnly"
 		},
 		{
 			"key": "disableDry"

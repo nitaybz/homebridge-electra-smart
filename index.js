@@ -23,6 +23,7 @@ class ElectraSmartPlatform {
 		this.syncHomeKitCache = syncHomeKitCache(this)
 		this.name = config['name'] || PLATFORM_NAME
 		this.disableFan = config['disableFan'] || false
+		this.fanSpeedOnly = config['fanSpeedOnly'] || false
 		this.disableDry = config['disableDry'] || false
 		this.swingDirection = config['swingDirection'] || 'both'
 		this.minTemp = config['minTemperature'] || 16

@@ -30,6 +30,7 @@ class AirConditioner {
 		this.temperatureUnit = deviceInfo.temperatureUnit
 		this.usesFahrenheit = this.temperatureUnit === FAHRENHEIT_UNIT
 		this.disableFan = platform.disableFan
+		this.fanSpeedOnly = platform.fanSpeedOnly
 		this.disableDry = platform.disableDry
 		this.swingDirection = platform.swingDirection
 		this.minTemp = platform.minTemp
@@ -370,9 +371,14 @@ class AirConditioner {
 						this.updateValue('HeaterCoolerService', 'CurrentHeaterCoolerState', Characteristic.CurrentHeaterCoolerState.HEATING)
 				}
 
-				// turn off FanService
-				if (this.FanService)
-					this.updateValue('FanService', 'Active', 0)
+				// Fan accessory: speed-only mode keeps it in sync with AC fan speed;
+				// otherwise turn it off while in heat/cool/auto
+				if (this.FanService) {
+					if (this.fanSpeedOnly)
+						this.updateFanSpeedOnlyService()
+					else
+						this.updateValue('FanService', 'Active', 0)
+				}
 
 				// turn off DryService
 				if (this.DryService) {
@@ -409,15 +415,15 @@ class AirConditioner {
 			case 'DRY':
 				if (this.DryService) {
 
-					// turn on FanService
+					// turn on DryService
 					this.updateValue('DryService', 'Active', 1)
 					this.updateValue('DryService', 'CurrentHumidifierDehumidifierState', Characteristic.CurrentHumidifierDehumidifierState.DEHUMIDIFYING)
 
-					// update swing for FanService
+					// update swing for DryService
 					if (this.capabilities.DRY.swing)
 						this.updateValue('DryService', 'SwingMode', Characteristic.SwingMode[this.state.swing])
 
-					// update fanSpeed for FanService
+					// update fanSpeed for DryService
 					if (this.capabilities.DRY.fanSpeeds)
 						this.updateValue('DryService', 'RotationSpeed', this.state.fanSpeed)
 				}
@@ -426,15 +432,31 @@ class AirConditioner {
 				this.updateValue('HeaterCoolerService', 'Active', 0)
 				this.updateValue('HeaterCoolerService', 'CurrentHeaterCoolerState', Characteristic.CurrentHeaterCoolerState.INACTIVE)
 
-				// turn off FanService
-				if (this.FanService)
-					this.updateValue('FanService', 'Active', 0)
+				// Fan accessory: keep in sync when speed-only, otherwise turn off
+				if (this.FanService) {
+					if (this.fanSpeedOnly)
+						this.updateFanSpeedOnlyService()
+					else
+						this.updateValue('FanService', 'Active', 0)
+				}
 
 				break
 		}
 
 		// cache last state to storage
 		this.storage.setItem('electra-state', this.cachedState)
+	}
+
+	// In fanSpeedOnly mode the Fan service is a speed control for whatever mode the
+	// device is in, so it tracks the device instead of representing FAN mode.
+	updateFanSpeedOnlyService() {
+		this.updateValue('FanService', 'Active', 1)
+
+		if (this.capabilities.FAN.swing)
+			this.updateValue('FanService', 'SwingMode', Characteristic.SwingMode[this.state.swing])
+
+		if (this.capabilities.FAN.fanSpeeds)
+			this.updateValue('FanService', 'RotationSpeed', this.state.fanSpeed)
 	}
 
 	updateValue (serviceName, characteristicName, newValue) {

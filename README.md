@@ -4,6 +4,10 @@
 
 # homebridge-electra-smart
 
+<p align="center">
+  <img src="branding/icon.png" alt="Electra Smart" width="96">
+</p>
+
 [![Downloads](https://img.shields.io/npm/dt/homebridge-electra-smart.svg?color=critical)](https://www.npmjs.com/package/homebridge-electra-smart)
 [![Version](https://img.shields.io/npm/v/homebridge-electra-smart)](https://www.npmjs.com/package/homebridge-electra-smart)<br>
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins) [![Homebridge Discord](https://img.shields.io/discord/432663330281226270?color=728ED5&logo=discord&label=discord)](https://discord.gg/ZX3wSZpXaP)<br>
@@ -67,6 +71,7 @@ This plugin is Homebridge verified and HOOBS certified and can be easily install
         "imei": "2b950000*************",
         "token": "**************************",
         "disableFan": false,
+        "fanSpeedOnly": false,
         "disableDry": false,
         "minTemperature": 16,
         "maxTemperature": 30,
@@ -86,6 +91,7 @@ This plugin is Homebridge verified and HOOBS certified and can be easily install
 | `imei`                 | Generated IMEI: obtain from terminal command - `electra-extract`       |     ✓    |     -    |  String  |
 | `token`                 | Access Token: obtain from terminal command - `electra-extract`       |     ✓    |     -    |  String  |
 | `disableFan`               |  When set to `true`, it will disable the FAN accessory        |          |  `false` |  Boolean |
+| `fanSpeedOnly`             |  When set to `true`, the Fan accessory only changes fan speed without switching to FAN mode        |          |  `false` |  Boolean |
 | `disableDry`               |  When set to `true`, it will disable the DRY accessory       |          |  `false` |  Boolean |
 | `statePollingInterval`          | Time in seconds between each status polling of the Electra devices (set to 0 for no polling)     |  `90` |  Integer |
 | `swingDirection`               |  Choose what kind of swing you would like to control in HomeKit. can be `"vertical"`, `"horizontal"` or `"both"`        |          |  `"both"` |  Boolean |
@@ -97,6 +103,8 @@ This plugin is Homebridge verified and HOOBS certified and can be easily install
 Since HomeKit control over fan speed is with a slider between 0-100, the plugin converts the steps you have in the Electra app to values between 1 to 100, when 100 is highest and 1 is lowest. Setting the fan speed to 0, should actually set it to "AUTO" speed.
 
 *Available fan speeds: AUTO, LOW, MED, HIGH*
+
+By default, the Fan accessory switches the AC to FAN mode. Set `fanSpeedOnly` to `true` if you want that accessory to only adjust fan speed (and swing) while leaving the current mode (COOL/HEAT/AUTO/etc.) unchanged. In this mode the Fan accessory follows the device power state and its On/Off switch does nothing - use the AC accessory to turn the device on and off.
 
 ### Swing
 Swing support is added automatically if supported.
